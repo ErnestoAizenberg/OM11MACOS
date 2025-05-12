@@ -1,0 +1,22 @@
+/* Для чекбоксов в темной теме */
+.dark #browserProfilesList input[type="checkbox"] {
+  filter: invert(80%) hue-rotate(180deg) brightness(1.2);
+}
+
+/* Для скроллбара в темной теме */
+.dark #browserProfilesList::-webkit-scrollbar {
+  width: 8px;
+}
+
+.dark #browserProfilesList::-webkit-scrollbar-track {
+  background: #374151;
+}
+
+.dark #browserProfilesList::-webkit-scrollbar-thumb {
+  background: #4B5563;
+  border-radius: 4px;
+}
+
+.dark #browserProfilesList::-webkit-scrollbar-thumb:hover {
+  background: #6B7280;
+}

@@ -1,0 +1,169 @@
+<!DOCTYPE html>
+<html lang="en" data-theme="night">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>OpenManus Agent</title>
+  <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet">
+  <link href="/static/css/style.css" rel="stylesheet">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            macos: {
+              'window': '#1E1E1E',
+              'sidebar': '#252525',
+              'accent': '#0066CC'
+            }
+          }
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-base-200 min-h-screen">
+  <div class="container mx-auto p-4">
+    <!-- macOS-style window -->
+    <div class="bg-base-100 rounded-lg shadow-xl overflow-hidden border border-base-300 max-w-5xl mx-auto">
+      <!-- Window header -->
+      <div class="flex items-center p-3 border-b border-base-300 bg-base-200">
+        <div class="flex space-x-2">
+          <div class="w-3 h-3 rounded-full bg-red-500"></div>
+          <div class="w-3 h-3 rounded-full bg-yellow-500"></div>
+          <div class="w-3 h-3 rounded-full bg-green-500"></div>
+        </div>
+        <div class="mx-auto font-semibold text-sm">OpenManus Agent</div>
+        <div class="flex space-x-2">
+          <button id="themeToggleBtn" class="btn btn-circle btn-ghost btn-xs">
+            <i class="fas fa-adjust"></i>
+          </button>
+        </div>
+      </div>
+
+      <!-- Main content -->
+      <div class="flex flex-col md:flex-row">
+        <!-- Sidebar -->
+        <div class="w-full md:w-64 bg-base-200 p-4 border-r border-base-300">
+          <div class="flex flex-col space-y-4">
+            <h2 class="text-lg font-bold mb-2">Agent Controls</h2>
+            
+            <!-- Status indicator -->
+            <div class="flex items-center mb-4">
+              <div id="agentStatusIndicator" class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+              <span id="agentStatusText" class="text-sm">Agent Offline</span>
+            </div>
+            
+            <!-- Control buttons -->
+            <button id="startAgentBtn" class="btn btn-primary w-full">
+              <i class="fas fa-play mr-2"></i> Start Agent
+            </button>
+            
+            <button id="openTelegramConnectMenu" class="btn btn-outline w-full">
+              <i class="fas fa-paper-plane mr-2"></i> Connect Telegram
+            </button>
+            {% include 'includes/telegram_conntect_form.html' %}
+            <button id="connectBrowserBtn" class="btn btn-outline w-full">
+              <i class="fas fa-globe mr-2"></i> Connect Browser
+            </button>
+            
+            {% include 'includes/browser_menu.html' %}
+
+            <div class="divider"></div>
+            
+            <!-- Settings section -->
+            <h3 class="text-md font-semibold">Settings</h3>
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <span class="label-text">Debug Mode</span>
+                <input id="debugModeToggle" type="checkbox" class="toggle toggle-primary" />
+              </label>
+            </div>
+            
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <span class="label-text">Auto-start</span>
+                <input id="autoStartToggle" type="checkbox" class="toggle toggle-primary" />
+              </label>
+            </div>
+            
+            <div class="form-control">
+              <label class="label cursor-pointer">
+                <span class="label-text">Notifications</span>
+                <input id="notificationsToggle" type="checkbox" class="toggle toggle-primary" checked />
+              </label>
+            </div>
+          </div>
+        </div>
+        
+        <!-- Main panel -->
+        <div class="flex-1 p-4">
+          <!-- Command input -->
+          <div class="mb-6">
+            <h2 class="text-lg font-bold mb-3">Command Center</h2>
+            <div class="flex">
+              <input id="commandInput" type="text" placeholder="Enter command for agent..." class="input input-bordered w-full" />
+              <button id="sendCommandBtn" class="btn btn-primary ml-2">
+                <i class="fas fa-paper-plane"></i>
+              </button>
+            </div>
+          </div>
+          
+          <!-- Command history -->
+          <div class="mb-6">
+            <div class="flex justify-between items-center mb-3">
+              <h3 class="text-md font-semibold">Command History</h3>
+              <button id="clearHistoryBtn" class="btn btn-ghost btn-xs">
+                <i class="fas fa-trash"></i>
+              </button>
+            </div>
+            <div id="commandHistoryContainer" class="bg-base-300 rounded-lg p-4 h-64 overflow-y-auto">
+              <div class="chat chat-start">
+                <div class="chat-bubble chat-bubble-primary">search for weather in New York</div>
+                <div class="chat-footer opacity-50 text-xs">10:42 AM</div>
+              </div>
+              <div class="chat chat-end">
+                <div class="chat-bubble">Searching for weather in New York...</div>
+                <div class="chat-footer opacity-50 text-xs">10:42 AM</div>
+              </div>
+              <div class="chat chat-end">
+                <div class="chat-bubble">Current weather in New York: 72°F, Partly Cloudy</div>
+                <div class="chat-footer opacity-50 text-xs">10:42 AM</div>
+              </div>
+            </div>
+          </div>
+          
+          <!-- Connection status -->
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="card bg-base-200">
+              <div class="card-body p-4">
+                <h3 class="card-title text-sm">Telegram Connection</h3>
+                <div class="flex items-center">
+                  <div id="telegramStatusIndicator" class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                  <span id="telegramStatusText" class="text-sm">Disconnected</span>
+                </div>
+                <div class="text-xs opacity-70 mt-2">Connect to receive and send messages via Telegram</div>
+              </div>
+            </div>
+            
+            <div class="card bg-base-200">
+              <div class="card-body p-4">
+                <h3 class="card-title text-sm">Browser API</h3>
+                <div class="flex items-center">
+                  <div id="browserStatusIndicator" class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
+                  <span id="browserStatusText" class="text-sm">Disconnected</span>
+                </div>
+                <div class="text-xs opacity-70 mt-2">Connect to control web browser actions</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <script type="module" src="/static/js/app.js"></script> 
+</body>
+</html>
