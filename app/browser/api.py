@@ -3,6 +3,23 @@ from typing import Any, Callable, Dict, List
 import requests
 from flask import Flask, jsonify, request, session
 
+AGENT_ADDRESS = "localhost"
+
+
+def start_browser(ws_url):
+    url = "http://AGENT_ADDRESS/api/browser/start/"
+    payload = {"ws_url": ws_url}
+
+    try:
+        response = requests.post(url, json=payload)
+        if response.status_code == 200:
+            print("Success:", response.json())
+        else:
+            print("Failed with status code:", response.status_code)
+            print("Response:", response.text)
+    except requests.exceptions.RequestException as e:
+        print("Request failed:", e)
+
 
 def configure_browser_api(
     app: Flask,
@@ -42,6 +59,7 @@ def configure_browser_api(
                 profile_id=data.get("profile_id"),
                 browser_type=data.get("type"),
             )
+            start_browser(result["ws_url"])
             return jsonify(success=True, ws_url=result["ws_url"])
         except ValueError as e:
             return jsonify(success=False, error=str(e)), 400

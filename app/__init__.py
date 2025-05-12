@@ -8,9 +8,12 @@ from app.agent.api import configure_agent_api
 from app.agent.manus_client import ManusClient
 from app.agent.settings.api import configure_agent_settings
 from app.browser.api import configure_browser_api
-from app.browser.browser_manager import (BrowserManager, get_user_profiles,
-                                         save_user_profiles,
-                                         transform_profiles)
+from app.browser.browser_manager import (
+    BrowserManager,
+    get_user_profiles,
+    save_user_profiles,
+    transform_profiles,
+)
 from app.extensions import init_redis
 from app.logs import logger
 from app.telegram.api import init_telegram_api

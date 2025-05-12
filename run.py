@@ -12,14 +12,7 @@ if __name__ == "__main__":
     redis_run = os.getenv("REDIS_RUN", "true").lower() == "true"
     if redis_run:
         print("Running Redis...")
-        subprocess.run(
-            [
-                "redis-server",
-                "--daemonize",
-                "yes"
-             ],
-             check=True
-         )
+        subprocess.run(["redis-server", "--daemonize", "yes"], check=True)
     app.run(
         debug=app.config.get("DEBUG"),
         port=app.config.get("PORT"),
