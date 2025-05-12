@@ -65,7 +65,7 @@ def configure_agent_api(
     def get_command_history() -> "jsonify":
         user_id: str = session["user_id"]
         try:
-            history: list = agent_manger.get_command_history(user_id)
+            history: list = agent_manager.get_command_history(user_id)
             logger.info(f"user: {user_id[:4]}... get {len(history)} history msg")
             return jsonify({"success": True, "command_history": history})
         except Exception as e:
@@ -77,7 +77,7 @@ def configure_agent_api(
     def start_agent() -> "jsonify":
         user_id: str = session["user_id"]
         try:
-            pid: int = agent_manger.start_agent(user_id)
+            pid: int = agent_manager.start_agent(user_id)
             if not pid:
                 return (
                     jsonify({"success": False, "error": "Agent already running"}),
@@ -94,7 +94,7 @@ def configure_agent_api(
     def stop_agent() -> "jsonify":
         user_id: str = session["user_id"]
         try:
-            success: bool = agent_manger.stop_agent(user_id)
+            success: bool = agent_manager.stop_agent(user_id)
             if not success:
                 return jsonify({"success": False, "error": "Agent not running"}), 400
             logger.info(f"Agent stopped for user {user_id}")
@@ -110,7 +110,7 @@ def configure_agent_api(
         try:
             status: str
             pid: int
-            status, pid = agent_manger.get_agent_status(user_id)
+            status, pid = agent_manager.get_agent_status(user_id)
             return jsonify({"success": True, "status": status, "pid": pid})
         except Exception as e:
             logger.error(f"Error getting agent status for user {user_id}: {str(e)}")
