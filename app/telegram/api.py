@@ -1,54 +1,107 @@
+import requests
 import logging
-
 import requests
 from flask import Flask, jsonify, request, session
 
-TELEGRAM_API_SERVICE_URL = "http://localhost:5001"  # URL of Telegram API microservice
+TELEGRAM_API_SERVICE_URL = "http://localhost:5001"  # URL of Telegram API microservice                                                                                                             
 
+class TelegramClient:
+    """Handles communication with the Telegram API microservice."""
+    def __init__(self, api_base_url: str, logger: logging.Logger):
+        self.api_base_url = api_base_url
+        self.logger = logger
 
-def init_telegram_api(app: Flask, login_required: callable, logger: logging.Logger):
-    @login_required
-    def connect_telegram():
-        user_id = session["user_id"]
-        data = request.get_json()  # Send data to the Telegram API service
+    def set_webhook(self, bot_token: str, webhook_url: str) -> bool:
+        """Set webhook for Telegram bot."""
         try:
-            response = requests.post(
-                f"{TELEGRAM_API_SERVICE_URL}/api/telegram/setup_webhook",
-                json={
-                    "bot_token": data.get("bot_token"),
-                    "chat_id": data.get("chat_id"),
-                    "user_id": user_id,
-                },
-            )
-            return jsonify(response.json()), response.status_code
-        except Exception as e:
-            app.logger.exception("Error connecting to Telegram API service")
-            return jsonify({"success": False, "error": str(e)}), 500
+            url = f"{self.api_base_url}/api/telegram/set_webhook"
+            response = requests.post(url, json={"bot_token": bot_token, "webhook_url": webhook_url})
+            response.raise_for_status()
+            data = response.json()
+            return data.get("success", False)
+        except requests.RequestException as e:
+            self.logger.exception("Failed to set webhook")
+            return False
 
-    @app.route("/api/telegram/disconnect", methods=["GET", "POST"])
-    @login_required
-    def disconnect_telegram():
-        user_id = session["user_id"]
+    def test_connection(self, bot_token: str, chat_id: str) -> bool:
+        """Test connection by trying to get bot info or similar."""
         try:
-            response = requests.post(
-                f"{TELEGRAM_API_SERVICE_URL}/api/telegram/disconnect",
-                json={"user_id": user_id},
-            )
-            return jsonify(response.json()), response.status_code
-        except Exception as e:
-            app.logger.exception("Error disconnecting Telegram")
-            return jsonify({"success": False, "error": str(e)}), 500
+            url = f"{self.api_base_url}/api/telegram/test_connection"
+            response = requests.post(url, json={"bot_token": bot_token, "chat_id": chat_id})
+            response.raise_for_status()
+            data = response.json()
+            return data.get("success", False)
+        except ConnectionError:                                                     self.logger.error(f"ConnectionError, Please make shure that telegram service run on url: {self.api_base_url}")
+        except requests.RequestException as e:
+            self.logger.exception("Connection test failed")
+            return False
+
+    def disconnect(self, user_id: str) -> bool:
+        """Handle disconnect logic if needed."""
+        try:
+            url = f"{self.api_base_url}/api/telegram/disconnect"
+            response = requests.post(url, json={"user_id": user_id})
+            response.raise_for_status()
+            data = response.json()
+            return data.get("success", False)
+        except requests.RequestException as e:
+            self.logger.exception("Failed to disconnect")
+            return False
+
+    def get_status(self, user_id: str) -> dict:
+        """Get connection status."""
+        try:
+            url = f"{self.api_base_url}/api/telegram/status"
+            response = requests.get(url, params={"user_id": user_id})
+            response.raise_for_status()
+            return response.json()
+        except (ConnectionError, ConnectionRefusedError, requests.exceptions.RequestException):
+            self.logger.error(f"ConnectionError, Please make shure that telegram service run on url: {self.api_base_url}")
+        except requests.RequestException as e:
+            self.logger.exception("Failed to fetch status")
+            return {"success": False, "error": str(e)}
+
+# Usage in Flask routes
+def init_telegram_api(
+        app: Flask,
+        login_required: callable,
+        logger: logging.Logger,
+        telegram_client: TelegramClient
+):
+    @app.route("/api/telegram/setup_webhook", methods=["POST"])
+    def setup_webhook():
+        data = request.get_json()
+        user_id = data.get("user_id")
+        bot_token = data.get("bot_token")
+        chat_id = data.get("chat_id")
+        webhook_url = f"{app.config['BASE_URL']}/webhook/{user_id}"  # example
+
+        # Test connection
+        if not telegram_client.test_connection(bot_token, chat_id):
+            return jsonify({"success": False, "error": "Failed to connect to Telegram"}), 400
+
+        # Set webhook
+        success = telegram_client.set_webhook(bot_token, webhook_url)
+        if success:
+            # Save config if needed
+            # configs[user_id] = {...}
+            return jsonify({"success": True, "message": "Webhook set successfully"})
+        else:
+            return jsonify({"success": False, "error": "Failed to set webhook"}), 500
+
+    @app.route("/api/telegram/disconnect", methods=["POST"])
+    def disconnect():
+        data = request.get_json()
+        user_id = data.get("user_id")
+        success = telegram_client.disconnect(user_id)
+        if success:
+            # Remove configs if stored
+            return jsonify({"success": True, "message": "Disconnected successfully"})
+        else:
+            return jsonify({"success": False, "error": "Failed to disconnect"}), 500
 
     @app.route("/api/telegram/status", methods=["GET"])
-    @login_required
-    def telegram_status():
-        user_id = session["user_id"]
-        try:
-            response = requests.get(
-                f"{TELEGRAM_API_SERVICE_URL}/api/telegram/status",
-                params={"user_id": user_id},
-            )
-            return jsonify(response.json()), response.status_code
-        except Exception as e:
-            app.logger.exception("Error fetching Telegram status")
-            return jsonify({"success": False, "error": str(e)}), 500
+    def status():
+        user_id = request.args.get("user_id")
+        status_info = telegram_client.get_status(user_id)
+        return jsonify(status_info)

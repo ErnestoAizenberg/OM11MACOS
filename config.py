@@ -14,13 +14,16 @@ def get_input(prompt, default=None):
     return user_input if user_input else default
 
 
+class DefConfig:
+    pass
+
 class Config:
     """Basic Flask config."""
 
     SECRET_KEY = args.secret_key or get_input(
         "Введите секретный ключ", "your_very_secret_key_here"
     )
-    DEBUG = os.getenv("FLASK_DEBUG", "false").lower() in ["true", "1", "t"]
+    DEBUG = os.getenv("FLASK_DEBUG", "true").lower() in ["true", "1", "t"]
     SERVER_ADDRESS = args.server_address or get_input(
         ">>адрес сервера", "https://example.com"
     )

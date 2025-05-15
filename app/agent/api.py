@@ -43,7 +43,7 @@ def configure_agent_api(
                             f"Telegram message to {user_uuid} sended successfully"
                         )
 
-                joined_list = output_chain.join("\n")
+                joined_list = ''.join(output_chain)
                 logger.info(
                     f"Command executed for user {user_uuid[:4]}...: {joined_list}"
                 )
