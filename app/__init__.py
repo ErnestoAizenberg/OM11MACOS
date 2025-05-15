@@ -1,3 +1,4 @@
+import os
 from typing import Callable
 
 import redis
@@ -29,6 +30,7 @@ init_telegram_api: Callable
 
 def create_app(app_config, redis_config: RedisConfig) -> Flask:
     app = Flask(__name__)
+    os.makedirs('instance', exist_ok=True)
     redis_client = init_redis(redis_config)
 
     # Memory habdler for OM Agent
