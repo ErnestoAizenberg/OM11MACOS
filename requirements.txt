@@ -1,4 +1,6 @@
-Flask==2.2.2
-redis==4.5.3
+Flask
+redis
 secure
 asgiref
+requests
+dotenv
