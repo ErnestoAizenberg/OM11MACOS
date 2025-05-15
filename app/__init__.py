@@ -19,6 +19,7 @@ from app.extensions import init_redis
 from app.logs import logger
 from app.telegram.api import init_telegram_api
 from app.telegram.api_client import TelegramClient
+from app.api import configure_api
 from app.utils import login_required
 from config import RedisConfig
 
@@ -79,4 +80,5 @@ def create_app(app_config, redis_config: RedisConfig) -> Flask:
         logger=logger,
     )
 
+    configure_api(app)
     return app
