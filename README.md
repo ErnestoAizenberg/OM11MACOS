@@ -2,8 +2,13 @@
 An Open Manus Agent MacOS UI
 
 GATEWAY API for web interface.
+OM11MACOS communicate with OM11TG and open-manus-agent microservices.
 
-It communicate with OM11TG and open-manus-agent microservices.
+# Telegram:
+https://github.com/ErnestoAizenberg/OM11TG
+
+# Open Manus Agebnt (Browser + LLM)
+https://github.com/ErnestoAizenberg/open-manus-agent
 
 methods:
 execute_command() -> OM11
