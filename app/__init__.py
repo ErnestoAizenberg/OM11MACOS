@@ -18,36 +18,35 @@ from app.browser.browser_manager import (
 from app.extensions import init_redis
 from app.logs import logger
 from app.telegram.api import init_telegram_api, TelegramClient
-#from app.telegram.api_client import TelegramClient
+
+# from app.telegram.api_client import TelegramClient
 from app.api import configure_api
 from app.utils import login_required, generate_uuid_32
-from config import RedisConfig
-
-AGENT_URL = "http://localhost:5002"
+from config import RedisConfig, Config, APIURLConfig
 
 init_redis: Callable[[RedisConfig], redis.Redis]
 init_telegram_api: Callable
 
 
-def create_app(app_config, redis_config: RedisConfig) -> Flask:
+def create_app(
+    app_config: Config, api_url_config: APIURLConfig, redis_config: RedisConfig
+) -> Flask:
     app = Flask(__name__)
     app.secret_key = app_config.get("SECRET_KEY")
-    
-    os.makedirs('instance', exist_ok=True)
+
+    os.makedirs("instance", exist_ok=True)
     redis_client = init_redis(redis_config)
 
     # Memory habdler for OM Agent
     agent_manager = AgentManager(redis_client)
 
     # For talking with OM11 microservice
-    manus_client = ManusClient(
-        logger=logger,
-        agent_url=AGENT_URL,
-    )
+    manus_client = ManusClient(logger=logger, agent_url=api_url_config.get("OM11"))
     # For talking with OM11TG microservice
-    TG_API_URL = "http://localhost:5001"
-    telegram_client_instance = TelegramClient(logger=logger, api_base_url=TG_API_URL)
-
+    telegram_client_instance = TelegramClient(
+        logger=logger,
+        api_base_url=api_url_config.get("OM11TG"),
+    )
 
     # For holding user-agent settings, may be shouldb't be part of this micro.
     configure_agent_settings(
@@ -84,6 +83,7 @@ def create_app(app_config, redis_config: RedisConfig) -> Flask:
         telegram_client=telegram_client_instance,
     )
 
+    # Main app routes
     configure_api(
         app=app,
         logger=logger,

@@ -1,0 +1,8 @@
+{
+  "include": ["app"],
+  "exclude": [
+    "tests",
+    "tools",
+  ],
+  "reportMissingTypeStubs": false
+}

@@ -1,25 +1,31 @@
 import requests
 import logging
-import requests
 from flask import Flask, jsonify, request, session
 
-TELEGRAM_API_SERVICE_URL = "http://localhost:5001"  # URL of Telegram API microservice                                                                                                             
 
 class TelegramClient:
     """Handles communication with the Telegram API microservice."""
+
     def __init__(self, api_base_url: str, logger: logging.Logger):
         self.api_base_url = api_base_url
         self.logger = logger
 
-    def set_webhook(self, bot_token: str, webhook_url: str) -> bool:
+    def set_webhook(self, bot_token: str, user_id: str) -> bool:
         """Set webhook for Telegram bot."""
         try:
             url = f"{self.api_base_url}/api/telegram/set_webhook"
-            response = requests.post(url, json={"bot_token": bot_token, "webhook_url": webhook_url})
+            response = requests.post(
+                url,
+                json={
+                    "bot_token": bot_token,
+                    "user_id": user_id,
+                },
+            )
+
             response.raise_for_status()
             data = response.json()
             return data.get("success", False)
-        except requests.RequestException as e:
+        except requests.RequestException:
             self.logger.exception("Failed to set webhook")
             return False
 
@@ -27,24 +33,53 @@ class TelegramClient:
         """Test connection by trying to get bot info or similar."""
         try:
             url = f"{self.api_base_url}/api/telegram/test_connection"
-            response = requests.post(url, json={"bot_token": bot_token, "chat_id": chat_id})
+            response = requests.post(
+                url, json={"bot_token": bot_token, "chat_id": chat_id}
+            )
             response.raise_for_status()
             data = response.json()
             return data.get("success", False)
-        except ConnectionError:                                                     self.logger.error(f"ConnectionError, Please make shure that telegram service run on url: {self.api_base_url}")
-        except requests.RequestException as e:
+        except ConnectionError:
+            self.logger.error(
+                f"ConnectionError, Please make sure that telegram service runs on URL: {self.api_base_url}"
+            )
+            return False
+        except requests.RequestException:
             self.logger.exception("Connection test failed")
             return False
 
+    def send_message(self, message: str, user_uuid: str) -> bool:
+        """Sending message in TG."""
+        try:
+            url = f"{self.api_base_url}/api/telegram/send_message"
+            response = requests.post(
+                url,
+                json={
+                    "user_id": user_uuid,
+                    "message_text": message,
+                },
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data.get("success", False)
+        except ConnectionError:
+            self.logger.error(
+                f"ConnectionError, Please make sure that telegram service runs on URL: {self.api_base_url}"
+            )
+            return False
+        except requests.RequestException:
+            self.logger.exception("Sending message failed")
+            return False
+
     def disconnect(self, user_id: str) -> bool:
-        """Handle disconnect logic if needed."""
+        """Handle disconnect logic."""
         try:
             url = f"{self.api_base_url}/api/telegram/disconnect"
             response = requests.post(url, json={"user_id": user_id})
             response.raise_for_status()
             data = response.json()
             return data.get("success", False)
-        except requests.RequestException as e:
+        except requests.RequestException:
             self.logger.exception("Failed to disconnect")
             return False
 
@@ -55,36 +90,52 @@ class TelegramClient:
             response = requests.get(url, params={"user_id": user_id})
             response.raise_for_status()
             return response.json()
-        except (ConnectionError, ConnectionRefusedError, requests.exceptions.RequestException):
-            self.logger.error(f"ConnectionError, Please make shure that telegram service run on url: {self.api_base_url}")
+        except (
+            ConnectionError,
+            ConnectionRefusedError,
+            requests.exceptions.RequestException,
+        ):
+            self.logger.error(
+                f"ConnectionError, Please make sure that telegram service runs on URL: {self.api_base_url}"
+            )
+            return {"success": False, "error": "Connection error"}
         except requests.RequestException as e:
             self.logger.exception("Failed to fetch status")
             return {"success": False, "error": str(e)}
 
-# Usage in Flask routes
+
 def init_telegram_api(
-        app: Flask,
-        login_required: callable,
-        logger: logging.Logger,
-        telegram_client: TelegramClient
+    app: Flask,
+    login_required: callable,
+    logger: logging.Logger,
+    telegram_client: TelegramClient,
 ):
-    @app.route("/api/telegram/setup_webhook", methods=["POST"])
+    @app.route("/api/telegram/connect", methods=["POST"])
     def setup_webhook():
         data = request.get_json()
-        user_id = data.get("user_id")
+        user_id = session.get("user_id")
         bot_token = data.get("bot_token")
         chat_id = data.get("chat_id")
-        webhook_url = f"{app.config['BASE_URL']}/webhook/{user_id}"  # example
 
+        if not bot_token or chat_id:
+            return (
+                jsonify({"success": False, "error": "Failed to connect to Telegram"}),
+                400,
+            )
         # Test connection
         if not telegram_client.test_connection(bot_token, chat_id):
-            return jsonify({"success": False, "error": "Failed to connect to Telegram"}), 400
+            return (
+                jsonify({"success": False, "error": "Failed to connect to Telegram"}),
+                400,
+            )
 
         # Set webhook
-        success = telegram_client.set_webhook(bot_token, webhook_url)
+        success = telegram_client.set_webhook(
+            bot_token=bot_token,
+            chat_id=chat_id,
+            user_id=user_id,
+        )
         if success:
-            # Save config if needed
-            # configs[user_id] = {...}
             return jsonify({"success": True, "message": "Webhook set successfully"})
         else:
             return jsonify({"success": False, "error": "Failed to set webhook"}), 500
