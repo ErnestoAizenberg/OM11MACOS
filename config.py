@@ -42,7 +42,7 @@ class APIURLConfig:
     Class holding API URL configurations.
     """
 
-    OM11 = "https://c081-34-91-46-134.ngrok-free.app"
+    OM11 = "https://2de7-35-196-192-57.ngrok-free.app"
     OM11TG = "http://localhost:5001"
 
     def get(self, key, default=None):
