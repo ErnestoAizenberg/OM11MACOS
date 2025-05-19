@@ -12,7 +12,7 @@ class ManusClient:
     def execute_command(self, message: str, user_uuid: str) -> List[str]:
         params = {"message": message, "user_uuid": user_uuid}
         try:
-            response = requests.get(
+            response = requests.post(
                 f"{self.agent_url}/api/execute_command/", params=params
             )
             response.raise_for_status()
@@ -24,3 +24,16 @@ class ManusClient:
         except requests.RequestException as e:
             self.logger.error(f"Request failed: {e}")
             return []
+
+    def agent_status(self, user_id: str) -> bool:
+        try:
+            params = {"user_id": user_id}
+            response = requests.get(
+                f"{self.agent_url}/api/check-agent-status", params=params
+            )
+            response.raise_for_status()
+            data = response.json()
+            return data.get("active", False)
+        except Exception as e:
+            self.logger.error(f"Request failed: {e}")
+            return False

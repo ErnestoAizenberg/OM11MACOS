@@ -1,34 +1,41 @@
-from typing import Any, Callable, Dict, List
+from typing import Any, Dict, List
 
 import requests
 from flask import Flask, jsonify, request, session
 
-AGENT_ADDRESS = "localhost"
+from app.browser.browser_manager import (
+    BrowserManager,
+    get_user_profiles,
+    save_user_profiles,
+    transform_profiles,
+)
 
-
-def start_browser(ws_url):
-    url = "http://AGENT_ADDRESS/api/browser/start/"
-    payload = {"ws_url": ws_url}
-
-    try:
-        response = requests.post(url, json=payload)
-        if response.status_code == 200:
-            print("Success:", response.json())
-        else:
-            print("Failed with status code:", response.status_code)
-            print("Response:", response.text)
-    except requests.exceptions.RequestException as e:
-        print("Request failed:", e)
+__all__ = ["configure_browser_api"]
 
 
 def configure_browser_api(
     app: Flask,
-    BrowserManager: Any,
-    get_user_profiles: Callable[[str], List[Dict[str, Any]]],
-    save_user_profiles: Callable[[str, List[Dict[str, Any]]], bool],
-    transform_profiles: Callable[[List[Dict[str, Any]]], Any],
+    BrowserManager: type(BrowserManager),
+    AGENT_ADDRESS: str,
+    get_user_profiles: get_user_profiles,
+    save_user_profiles: save_user_profiles,
+    transform_profiles: transform_profiles,
 ) -> None:
     manager = BrowserManager()
+
+    def start_browser(ws_url):
+        url = "http://AGENT_ADDRESS/api/browser/start/"
+        payload = {"ws_url": ws_url}
+
+        try:
+            response = requests.post(url, json=payload)
+            if response.status_code == 200:
+                print("Success:", response.json())
+            else:
+                print("Failed with status code:", response.status_code)
+                print("Response:", response.text)
+        except requests.exceptions.RequestException as e:
+            print("Request failed:", e)
 
     @app.route("/api/browser/profiles", methods=["GET"])
     def get_profiles() -> "jsonify":

@@ -26,7 +26,7 @@ class ColoredFormatter(logging.Formatter):
         return super().format(record)
 
 
-logging.basicConfig(level=logging.INFO)
+logging.basicConfig(level=logging.DEBUG)
 logger = logging.getLogger(__name__)
 
 handler = logging.StreamHandler()

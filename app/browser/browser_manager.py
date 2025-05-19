@@ -34,7 +34,7 @@ class BrowserManager:
         )
         response.raise_for_status()
 
-        return self._transform_profiles(response.json(), browser_type)
+        return transform_profiles(response.json(), browser_type)
 
     def start_profile(
         self, user_id: str, api_url: str, profile_id: str, browser_type: str
@@ -160,6 +160,7 @@ class BrowserManager:
             f"{api_url}/api/profile/{profile_id}/stop", timeout=self.REQUEST_TIMEOUT
         )
 
+    """
     def _transform_profiles(
         self, raw_profiles: List[Dict], browser_type: str
     ) -> List[Dict]:
@@ -172,6 +173,7 @@ class BrowserManager:
             "linken": self._transform_linken_profiles,
         }
         return transformers[browser_type](raw_profiles)
+    """
 
     def _cleanup_old_configs(self):
         cutoff = datetime.now() - timedelta(days=self.CONFIG_CLEANUP_DAYS)

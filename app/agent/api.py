@@ -1,7 +1,6 @@
 from logging import Logger
-from typing import Callable, List
-
-from flask import Flask, abort, jsonify, request, session
+from typing import Callable, List, Tuple, Dict
+from flask import Flask, abort, jsonify, request, session, Response
 
 from app.agent.agent_manager import AgentManager
 from app.agent.manus_client import ManusClient
@@ -18,52 +17,73 @@ def configure_agent_api(
 ) -> None:
     @app.route("/api/command", methods=["POST"])
     @login_required
-    def execute_command() -> "jsonify":
-        """API to execute command from macos interface, it send logs to telegram if TG is connected"""
-        user_uuid: str = session["user_id"]
+    def execute_command() -> Tuple[Response, int]:
+        """API to execute command from macOS interface, it sends logs to Telegram if TG is connected."""
+        user_uuid: str = session.get("user_id")
         try:
             data_dict: dict = request.get_json()
-            if isinstance(data_dict, dict):
-                message: str = data_dict.get("command")
-                ### Stream realisation will be aplied soon enougth
-                output_chain: List[str] = manus_client.execute_command(
-                    message=message, user_uuid=user_uuid
-                )
-                for chain in output_chain:
-                    status = telegram_client.send_message(
-                        user_uuid=user_uuid,
-                        message=chain,
-                    )  # posibly it should to be authorised some way
-                    if not status:
-                        logger.error(
-                            f"Telegram message to {user_uuid} sended unsuccessfully"
-                        )
-                    else:
-                        logger.info(
-                            f"Telegram message to {user_uuid} sended successfully"
-                        )
-
-                joined_list = "".join(output_chain)
-                logger.info(
-                    f"Command executed for user {user_uuid[:4]}...: {joined_list}"
-                )
-                return jsonify(
-                    {
-                        "success": True,
-                        "output": joined_list,
-                    }
-                )
-            else:
+            if not isinstance(data_dict, dict):
                 logger.error("execute_command received invalid data")
                 abort(400)
+            message: str = data_dict.get("command")
+            user_command_entry: Dict = agent_manager.save_command(
+                user_id=user_uuid,
+                command=message,
+                timestamp=None,
+                status=None,
+                is_user=True,
+            )
+            logger.debug(user_command_entry)
+
+            # Check if user has a connected browser
+            user_is_connected: bool = manus_client.agent_status(user_id=user_uuid)
+            if not user_is_connected:
+                return (
+                    jsonify(
+                        {
+                            "success": False,
+                            "error": "Connected browser is not found, connect a browser first",
+                        }
+                    ),
+                    400,
+                )
+
+            # Execute command
+            output_chain: List[str] = manus_client.execute_command(
+                message=message, user_uuid=user_uuid
+            )
+            # Format data; real-time streaming will be implemented soon
+            joined_list: str = "".join(output_chain)
+            logger.info(f"Command executed for user {user_uuid[:4]}...: {joined_list}")
+
+            command_output: Dict = agent_manager.save_command(
+                user_id=user_uuid,
+                command=joined_list,
+                timestamp=None,
+                status=None,
+                is_user=False,
+            )
+            logger.debug(command_output)
+
+            # Send message in Telegram
+            for chain in output_chain:
+                status: bool = telegram_client.send_message(
+                    user_uuid=user_uuid,
+                    message=chain,
+                )
+                if status:
+                    logger.info(f"Telegram message to {user_uuid} sent successfully")
+                else:
+                    logger.error(f"Telegram message to {user_uuid} failed to send")
+            return jsonify({"success": True, "output": joined_list})
         except Exception as e:
             logger.error(f"Error executing command for user {user_uuid}: {str(e)}")
             return jsonify({"success": False, "error": "Internal server error"}), 500
 
     @app.route("/api/command/history", methods=["GET"])
     @login_required
-    def get_command_history() -> "jsonify":
-        user_id: str = session["user_id"]
+    def get_command_history() -> Tuple[Response, int]:
+        user_id: str = session.get("user_id")
         try:
             history: list = agent_manager.get_command_history(user_id)
             logger.info(f"user: {user_id[:4]}... get {len(history)} history msg")
@@ -74,8 +94,8 @@ def configure_agent_api(
 
     @app.route("/api/agent/start", methods=["POST"])
     @login_required
-    def start_agent() -> "jsonify":
-        user_id: str = session["user_id"]
+    def start_agent() -> Tuple[Response, int]:
+        user_id: str = session.get("user_id")
         try:
             pid: int = agent_manager.start_agent(user_id)
             if not pid:
@@ -91,8 +111,8 @@ def configure_agent_api(
 
     @app.route("/api/agent/stop", methods=["POST"])
     @login_required
-    def stop_agent() -> "jsonify":
-        user_id: str = session["user_id"]
+    def stop_agent() -> Tuple[Response, int]:
+        user_id: str = session.get("user_id")
         try:
             success: bool = agent_manager.stop_agent(user_id)
             if not success:
@@ -105,8 +125,8 @@ def configure_agent_api(
 
     @app.route("/api/agent/status", methods=["GET"])
     @login_required
-    def agent_status() -> "jsonify":
-        user_id: str = session["user_id"]
+    def agent_status() -> Tuple[Response, int]:
+        user_id: str = session.get("user_id")
         try:
             status: str
             pid: int

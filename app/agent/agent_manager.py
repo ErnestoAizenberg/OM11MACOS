@@ -1,5 +1,6 @@
 # user_manager.py
 import json
+from typing import Dict
 from datetime import datetime
 
 
@@ -13,7 +14,9 @@ class AgentManager:
             f"user:{user_id}", "created_at", datetime.now().isoformat()
         )
 
-    def save_command(self, user_id, command, timestamp=None, status=None, is_user=None):
+    def save_command(
+        self, user_id, command, timestamp=None, status=None, is_user=None
+    ) -> Dict:
         command_history_raw = self.redis_client.hget(
             f"user:{user_id}", "command_history"
         )
