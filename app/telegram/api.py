@@ -187,7 +187,7 @@ def init_telegram_api(
 
     @app.route("/api/telegram/disconnect", methods=["POST"])
     def disconnect():
-        data = request.get_json()
+        #data = request.get_json()
         user_id = session.get("user_id")
         logger.info(f"Received disconnect request for user_id={user_id}")
         success = telegram_client.disconnect(user_id)

@@ -15,7 +15,7 @@ from app.browser.browser_manager import (
     save_user_profiles,
     transform_profiles,
 )
-from app.extensions import init_redis
+from app.extensions import init_redis, db
 from app.logs import logger
 from app.telegram.api import init_telegram_api, TelegramClient
 
@@ -23,19 +23,34 @@ from app.telegram.api import init_telegram_api, TelegramClient
 from app.api import configure_api
 from app.utils import login_required, generate_uuid_32
 from config import RedisConfig, Config, APIURLConfig
-
+from app.repos import UserRepo
+from app.auth import auth_bp
 init_redis: Callable[[RedisConfig], redis.Redis]
 init_telegram_api: Callable
 
 
 def create_app(
-    app_config: Config, api_url_config: APIURLConfig, redis_config: RedisConfig
+    app_config: Config,
+    api_url_config: APIURLConfig,
+    redis_config: RedisConfig
 ) -> Flask:
-    app = Flask(__name__)
-    app.secret_key = app_config.get("SECRET_KEY")
 
     os.makedirs("instance", exist_ok=True)
+
+    app = Flask(__name__)
+
+    app.secret_key = app_config.get("SECRET_KEY")
+    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
+    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config["OAUTH2_PROVIDERS"] = app_config.get("OAUTH2_PROVIDERS")
+    db.init_app(app)
+    with app.app_context():
+        db.create_all()
+
     redis_client = init_redis(redis_config)
+    user_repo = UserRepo(db.session, logger)
+
+    app.user_repo = user_repo
 
     # Memory habdler for OM Agent
     agent_manager = AgentManager(redis_client)
@@ -91,4 +106,5 @@ def create_app(
         redis_client=redis_client,
         generate_uuid_32=generate_uuid_32,
     )
+    app.register_blueprint(auth_bp, url_prefix='')
     return app

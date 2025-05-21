@@ -10,14 +10,16 @@ def configure_api(
 ):
     @app.route("/")
     def index():
-        return render_template("index.html")
+        user_id = session.get("user_id", None)
+        return render_template("index.html", user_id=user_id)
 
     @app.before_request
     def before_request():
-        # Initialize session if not exists
+        logger.info("user_id in session={session.get('user_id)}")
         if "user_id" not in session:
-            session["user_id"] = generate_uuid_32()
-            redis_client.hset(
-                f"user:{session['user_id']}", "created_at", datetime.now().isoformat()
-            )
-            logger.info(f"New session initialized for user {session['user_id']}")
+            #session["user_id"] = generate_uuid_32()
+            #redis_client.hset(
+            #    f"user:{session['user_id']}", "created_at", datetime.now().isoformat()
+            #)
+            #logger.info(f"New session initialized for user {session['user_id']}")
+            pass

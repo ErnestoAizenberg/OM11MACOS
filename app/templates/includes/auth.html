@@ -1,0 +1,16 @@
+{% if not user_id %}
+<div class="flex justify-center my-4">
+  <a href="{{ url_for('auth.oauth2_authorize', provider='google') }}"
+     class="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200">
+    <!-- Optional: Google icon (using Font Awesome or SVG) -->
+    <i class="fab fa-google"></i>
+    <span>Sign in with Google</span>
+  </a>
+</div>
+{% else %}
+<div class="flex justify-center my-4">
+	<a href="{{ url_for('auth.logout') }}" class="bg-gray-600 hover:bg-gray-700 text-white font-semibold py-2 px-4 rounded-lg shadow-md transition duration-200">
+    Sign out
+  </a>
+</div>
+{% endif %}

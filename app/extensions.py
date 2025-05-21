@@ -1,5 +1,7 @@
 import redis
+from flask_sqlalchemy import SQLAlchemy
 
+db = SQLAlchemy()
 
 def init_redis(config):
     redis_client = redis.Redis(

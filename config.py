@@ -71,6 +71,19 @@ class Config:
     )
     HOST = args.host or get_input("Host", "localhost")
     PORT = args.port or int(get_input("Port", "5000"))
+    OAUTH2_PROVIDERS = {
+        "google": {
+            "client_id": os.getenv("CLIENT_ID"),
+            "client_secret": os.getenv("CLIENT_SECRET"),
+            "authorize_url": "https://accounts.google.com/o/oauth2/auth",
+            "token_url": "https://accounts.google.com/o/oauth2/token",
+            "userinfo": {
+                "url": "https://www.googleapis.com/oauth2/v3/userinfo",
+                "email": lambda json: json["email"],
+            },
+            "scopes": ["https://www.googleapis.com/auth/userinfo.email"],
+        },
+    }
 
     def get(self, key, default=None):
         return getattr(self, key, default)
