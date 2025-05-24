@@ -86,11 +86,12 @@ def create_app(
     # Initialize part of api, which is used to handle UI and communicate with browsers, hasn't bias yet
     configure_browser_api(
         app=app,
-        BrowserManager=BrowserManager,
+        logger=logger,
+        BrowserManagerClass=BrowserManager,
         AGENT_ADDRESS=api_url_config.get("OM11TG"),
-        get_user_profiles=get_user_profiles,
-        save_user_profiles=save_user_profiles,
-        transform_profiles=transform_profiles,
+        get_user_profiles_fn=get_user_profiles,
+        save_user_profiles_fn=save_user_profiles,
+        transform_profiles_fn=transform_profiles,
     )
 
     # Initialize part of api, which is used to handle UI and communicate with OM11TG microservice

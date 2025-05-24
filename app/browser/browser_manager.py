@@ -1,4 +1,5 @@
 import json
+import urllib.parse
 import logging
 from datetime import datetime, timedelta
 from pathlib import Path
@@ -22,7 +23,7 @@ class BrowserManager:
             "octo": f"{api_url}/api/v1/profile",
             "dolphin": f"{api_url}/profiles",
             "gologin": f"{api_url}/gologin/profiles",
-            "undetectable": f"{api_url}/api/profiles",
+            "undetectable": f"{api_url}/list",
             "vision": f"{api_url}/api/v1/profiles",
             "linken": f"{api_url}/api/profiles",
         }
@@ -103,14 +104,20 @@ class BrowserManager:
         response.raise_for_status()
         return {"ws_url": response.json().get("debuggerAddress")}
 
-    def _start_undetectable_profile(self, api_url: str, profile_id: str) -> Dict:
-        response = requests.post(
-            f"{api_url}/api/profile/{profile_id}/start",
-            json={"headless": False},
-            timeout=self.REQUEST_TIMEOUT,
-        )
+    def _start_undetectable_profile(self, api_url: str, profile_id: str, chrome_flags: str = None, start_pages: str = None, headless: bool = False) -> Dict:
+        url = f"{api_url}/profile/start/{urllib.parse.quote(profile_id)}"
+        params = {}
+        if headless:
+            params["--headless"] = "new"
+        if chrome_flags:
+            params["chrome_flags"] = chrome_flags
+
+        headers = {
+            'Accept': 'application/json'
+        }
+        response = requests.get(url, params, headers=headers, timeout=self.REQUEST_TIMEOUT)
         response.raise_for_status()
-        return {"ws_url": response.json().get("wsUrl")}
+        return {"ws_url": response.json().get("websocket_link")}
 
     def _start_vision_profile(self, api_url: str, profile_id: str) -> Dict:
         response = requests.post(
@@ -231,11 +238,11 @@ def transform_profiles(raw_profiles: List[Dict], browser_type: str) -> List[Dict
                 {"id": profile["id"], "name": profile["name"], "browser": "gologin"}
             )
     elif browser_type == "undetectable":
-        for profile in raw_profiles["profiles"]:
+        for profile_id, profile in raw_profiles.get("data", {}).items():
             transformed.append(
                 {
-                    "id": profile["id"],
-                    "name": profile["name"],
+                    "id": profile_id,
+                    "name": profile.get("name", "unnamed"),
                     "browser": "undetectable",
                 }
             )

@@ -15,7 +15,7 @@ def configure_api(
 
     @app.before_request
     def before_request():
-        logger.info("user_id in session={session.get('user_id)}")
+        logger.info(f"user_id in session={session.get('user_id')}")
         if "user_id" not in session:
             #session["user_id"] = generate_uuid_32()
             #redis_client.hset(
