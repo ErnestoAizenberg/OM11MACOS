@@ -8,6 +8,12 @@ class UserRepo:
         self.db_session = db_session
         self.logger = logger or logging.getLogger(__name__)
 
+    def get(self, user_id: str):
+        self.logger.debug("Fetching user by id: %s", user_id)
+        user = self.db_session.query(User).filter(User.user_id == user_id).one_or_none()
+        self.logger.debug("Found user: %s", user)
+        return user
+
     def get_user_by_email(self, email: str) -> Optional[User]:
         self.logger.debug("Fetching user by email: %s", email)
         user = self.db_session.query(User).filter(User.email == email).one_or_none()

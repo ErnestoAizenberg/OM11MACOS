@@ -45,6 +45,8 @@
 
       <!-- Main content -->
       <div class="flex flex-col md:flex-row">
+	
+	                                                                   {% include 'includes/auth.html' %}                               {% include 'includes/email_auth.html' %}
         <!-- Sidebar -->
         <div class="w-full md:w-64 bg-base-200 p-4 border-r border-base-300">
           <div class="flex flex-col space-y-4">
@@ -70,8 +72,6 @@
             </button>
             
             {% include 'includes/browser_menu.html' %}
-
-	    {% include 'includes/auth.html' %}
             <div class="divider"></div>
             
             <!-- Settings section -->

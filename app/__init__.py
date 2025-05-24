@@ -25,6 +25,8 @@ from app.utils import login_required, generate_uuid_32
 from config import RedisConfig, Config, APIURLConfig
 from app.repos import UserRepo
 from app.auth import auth_bp
+from app.email_auth import configure_email_auth
+
 init_redis: Callable[[RedisConfig], redis.Redis]
 init_telegram_api: Callable
 
@@ -106,5 +108,9 @@ def create_app(
         redis_client=redis_client,
         generate_uuid_32=generate_uuid_32,
     )
+    configure_email_auth(
+        app=app,
+        user_repo=user_repo,
+    )
     app.register_blueprint(auth_bp, url_prefix='')
-    return app
+    return app  
