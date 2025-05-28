@@ -10,7 +10,7 @@ class UserRepo:
 
     def get(self, user_id: str):
         self.logger.debug("Fetching user by id: %s", user_id)
-        user = self.db_session.query(User).filter(User.user_id == user_id).one_or_none()
+        user = self.db_session.query(User).filter(User.id == user_id).one_or_none()
         self.logger.debug("Found user: %s", user)
         return user
 

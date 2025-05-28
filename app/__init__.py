@@ -45,6 +45,8 @@ def create_app(
     app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
     app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
     app.config["OAUTH2_PROVIDERS"] = app_config.get("OAUTH2_PROVIDERS")
+    
+    app.config["TEMPLATES_AUTO_RELOAD"] = True
     db.init_app(app)
     with app.app_context():
         db.create_all()
@@ -65,7 +67,8 @@ def create_app(
         api_base_url=api_url_config.get("OM11TG"),
     )
 
-    # For holding user-agent settings, may be shouldb't be part of this micro.
+    # Fir Holding user_agent_settings
+    # It may be not a part of this micro.
     configure_agent_settings(
         app=app,
         logger=logger,
@@ -107,6 +110,7 @@ def create_app(
         app=app,
         logger=logger,
         redis_client=redis_client,
+        user_repo=user_repo,
         generate_uuid_32=generate_uuid_32,
     )
     configure_email_auth(

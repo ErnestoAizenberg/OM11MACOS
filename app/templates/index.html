@@ -45,8 +45,16 @@
 
       <!-- Main content -->
       <div class="flex flex-col md:flex-row">
-	
-	                                                                   {% include 'includes/auth.html' %}                               {% include 'includes/email_auth.html' %}
+	<div class="flex flex-col space-y-4">
+	 {% if user %}
+	 <div class="w-full md:w-80 p-4 border-r border-base-300">
+
+	 {% include 'includes/account_dash.html' %}
+	 </div>
+	 {% endif %}
+	</div>
+
+
         <!-- Sidebar -->
         <div class="w-full md:w-64 bg-base-200 p-4 border-r border-base-300">
           <div class="flex flex-col space-y-4">
@@ -72,6 +80,9 @@
             </button>
             
             {% include 'includes/browser_menu.html' %}
+	    {% if not user_id %}
+	    {% include 'includes/auth.html' %}           {% include 'includes/email_auth.html' %}
+	    {% endif %}
             <div class="divider"></div>
             
             <!-- Settings section -->
