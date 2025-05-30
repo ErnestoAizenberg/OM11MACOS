@@ -1,4 +1,3 @@
-from datetime import datetime
 from flask import render_template, session
 
 
@@ -25,12 +24,8 @@ def configure_api(
                 "text": "Updated profile information",
                 "date": "May 10, 2025",
             },
-            {
-                "text": "Placed a new order",
-                "date": "May 8, 2025"
-            },
+            {"text": "Placed a new order", "date": "May 8, 2025"},
         ]
-
 
         return render_template(
             "index.html",
@@ -43,9 +38,9 @@ def configure_api(
     def before_request():
         logger.info(f"user_id in session={session.get('user_id')}")
         if "user_id" not in session:
-            #session["user_id"] = generate_uuid_32()
-            #redis_client.hset(
+            # session["user_id"] = generate_uuid_32()
+            # redis_client.hset(
             #    f"user:{session['user_id']}", "created_at", datetime.now().isoformat()
-            #)
-            #logger.info(f"New session initialized for user {session['user_id']}")
+            # )
+            # logger.info(f"New session initialized for user {session['user_id']}")
             pass

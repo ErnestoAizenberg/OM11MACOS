@@ -1,6 +1,7 @@
 from logging import Logger
-from typing import Callable, List, Tuple, Dict
-from flask import Flask, abort, jsonify, request, session, Response
+from typing import Callable, Dict, List, Tuple
+
+from flask import Flask, Response, abort, jsonify, request, session
 
 from app.agent.agent_manager import AgentManager
 from app.agent.manus_client import ManusClient

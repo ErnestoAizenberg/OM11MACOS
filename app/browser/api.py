@@ -1,17 +1,18 @@
-from typing import Any, Dict, List, Callable, Type
 import logging
+from typing import Any, Callable, Dict, List, Type
 
 import requests
 from flask import Flask, jsonify, request, session
 
-from app.browser.browser_manager import (
-    BrowserManager,
-    get_user_profiles,
-    save_user_profiles,
-    transform_profiles,
-)
+from app.browser.browser_manager import BrowserManager
 
 __all__ = ["configure_browser_api"]
+
+
+UserProfile = Dict[str, Any]
+UserProfilesGetter = Callable[[str], List[UserProfile]]
+UserProfilesSaver = Callable[[str, List[UserProfile]], None]
+UserProfilesTransformer = Callable[[List[UserProfile]], List[UserProfile]]
 
 
 def configure_browser_api(
@@ -19,9 +20,9 @@ def configure_browser_api(
     logger: logging.Logger,
     BrowserManagerClass: Type[BrowserManager],
     AGENT_ADDRESS: str,
-    get_user_profiles_fn: Callable[[str], List[Dict[str, Any]]],
-    save_user_profiles_fn: Callable[[str, List[Dict[str, Any]]], None],
-    transform_profiles_fn: Callable[[List[Dict[str, Any]]], List[Dict[str, Any]]],
+    get_user_profiles_fn: UserProfilesGetter,
+    save_user_profiles_fn: UserProfilesSaver,
+    transform_profiles_fn: UserProfilesTransformer,
 ) -> None:
     """
     Configures Flask routes for browser profile management.
@@ -45,7 +46,9 @@ def configure_browser_api(
         try:
             response = requests.post(url, json=payload)
             response.raise_for_status()
-            logger.info(f"Successfully started browser with response: {response.json()}")
+            logger.info(
+                f"Successfully started browser with response: {response.json()}"
+            )
         except requests.exceptions.RequestException as e:
             logger.error(f"Failed to start browser at {url}: {e}")
 
@@ -55,11 +58,15 @@ def configure_browser_api(
         browser_type: str = request.args.get("type")
 
         if not api_url:
-            logger.warning("Missing 'api_url' parameter in /api/browser/profiles request.")
+            logger.warning(
+                "Missing 'api_url' parameter in /api/browser/profiles request."
+            )
             return jsonify(success=False, error="API URL is required"), 400
 
         try:
-            profiles: List[Dict[str, Any]] = manager.fetch_profiles(api_url, browser_type)
+            profiles: List[Dict[str, Any]] = manager.fetch_profiles(
+                api_url, browser_type
+            )
             logger.info(f"Fetched {len(profiles)} profiles for api_url: {api_url}")
             return jsonify(success=True, profiles=profiles)
         except requests.exceptions.RequestException as e:
@@ -82,10 +89,19 @@ def configure_browser_api(
         browser_type: str = data.get("type")
 
         # Validate required data
-        missing_fields = [field for field in ["api_url", "profile_id", "type"] if not data.get(field)]
+        missing_fields = [
+            field for field in ["api_url", "profile_id", "type"] if not data.get(field)
+        ]
         if missing_fields:
-            logger.warning(f"Missing fields in /api/browser/start request: {missing_fields}")
-            return jsonify(success=False, error=f"Missing fields: {', '.join(missing_fields)}"), 400
+            logger.warning(
+                f"Missing fields in /api/browser/start request: {missing_fields}"
+            )
+            return (
+                jsonify(
+                    success=False, error=f"Missing fields: {', '.join(missing_fields)}"
+                ),
+                400,
+            )
 
         try:
             result: Dict[str, Any] = manager.start_profile(
@@ -97,10 +113,15 @@ def configure_browser_api(
             ws_url: str = result.get("ws_url")
             if not ws_url:
                 logger.error("start_profile did not return 'ws_url'.")
-                return jsonify(success=False, error="Failed to retrieve WebSocket URL"), 500
+                return (
+                    jsonify(success=False, error="Failed to retrieve WebSocket URL"),
+                    500,
+                )
 
             start_browser(ws_url)
-            logger.info(f"Started browser profile for user {user_id} with profile {profile_id}")
+            logger.info(
+                f"Started browser profile for user {user_id} with profile {profile_id}"
+            )
             return jsonify(success=True, ws_url=ws_url)
         except ValueError as e:
             logger.error(f"ValueError in /api/browser/start: {e}")

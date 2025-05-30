@@ -3,8 +3,9 @@ from datetime import datetime
 from app.extensions import db
 from app.utils import generate_uuid_32
 
+
 class User(db.Model):
-    __tablename__ = 'users'
+    __tablename__ = "users"
 
     id = db.Column(
         db.String(32),
@@ -29,7 +30,6 @@ class User(db.Model):
         db.DateTime,
         default=datetime.utcnow,
     )
-
 
     def __repr__(self):
         return f"<User id={self.id} username={self.username} email={self.email}>"

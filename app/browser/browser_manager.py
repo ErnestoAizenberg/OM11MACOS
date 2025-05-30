@@ -1,6 +1,6 @@
 import json
-import urllib.parse
 import logging
+import urllib.parse
 from datetime import datetime, timedelta
 from pathlib import Path
 from typing import Dict, List
@@ -104,7 +104,14 @@ class BrowserManager:
         response.raise_for_status()
         return {"ws_url": response.json().get("debuggerAddress")}
 
-    def _start_undetectable_profile(self, api_url: str, profile_id: str, chrome_flags: str = None, start_pages: str = None, headless: bool = False) -> Dict:
+    def _start_undetectable_profile(
+        self,
+        api_url: str,
+        profile_id: str,
+        chrome_flags: str = None,
+        start_pages: str = None,
+        headless: bool = False,
+    ) -> Dict:
         url = f"{api_url}/profile/start/{urllib.parse.quote(profile_id)}"
         params = {}
         if headless:
@@ -112,10 +119,10 @@ class BrowserManager:
         if chrome_flags:
             params["chrome_flags"] = chrome_flags
 
-        headers = {
-            'Accept': 'application/json'
-        }
-        response = requests.get(url, params, headers=headers, timeout=self.REQUEST_TIMEOUT)
+        headers = {"Accept": "application/json"}
+        response = requests.get(
+            url, params, headers=headers, timeout=self.REQUEST_TIMEOUT
+        )
         response.raise_for_status()
         return {"ws_url": response.json().get("websocket_link")}
 

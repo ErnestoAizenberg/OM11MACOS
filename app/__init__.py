@@ -8,6 +8,10 @@ from app.agent.agent_manager import AgentManager
 from app.agent.api import configure_agent_api
 from app.agent.manus_client import ManusClient
 from app.agent.settings.api import configure_agent_settings
+
+# from app.telegram.api_client import TelegramClient
+from app.api import configure_api
+from app.auth import auth_bp
 from app.browser.api import configure_browser_api
 from app.browser.browser_manager import (
     BrowserManager,
@@ -15,37 +19,30 @@ from app.browser.browser_manager import (
     save_user_profiles,
     transform_profiles,
 )
-from app.extensions import init_redis, db
-from app.logs import logger
-from app.telegram.api import init_telegram_api, TelegramClient
-
-# from app.telegram.api_client import TelegramClient
-from app.api import configure_api
-from app.utils import login_required, generate_uuid_32
-from config import RedisConfig, Config, APIURLConfig
-from app.repos import UserRepo
-from app.auth import auth_bp
 from app.email_auth import configure_email_auth
+from app.extensions import db, init_redis
+from app.logs import logger
+from app.repos import UserRepo
+from app.telegram.api import TelegramClient, init_telegram_api
+from app.utils import generate_uuid_32, login_required
+from config import APIURLConfig, Config, RedisConfig
 
 init_redis: Callable[[RedisConfig], redis.Redis]
 init_telegram_api: Callable
 
 
 def create_app(
-    app_config: Config,
-    api_url_config: APIURLConfig,
-    redis_config: RedisConfig
+    app_config: Config, api_url_config: APIURLConfig, redis_config: RedisConfig
 ) -> Flask:
-
     os.makedirs("instance", exist_ok=True)
 
     app = Flask(__name__)
 
     app.secret_key = app_config.get("SECRET_KEY")
-    app.config['SQLALCHEMY_DATABASE_URI'] = 'sqlite:///app.db'
-    app.config['SQLALCHEMY_TRACK_MODIFICATIONS'] = False
+    app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
+    app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
     app.config["OAUTH2_PROVIDERS"] = app_config.get("OAUTH2_PROVIDERS")
-    
+
     app.config["TEMPLATES_AUTO_RELOAD"] = True
     db.init_app(app)
     with app.app_context():
@@ -117,5 +114,5 @@ def create_app(
         app=app,
         user_repo=user_repo,
     )
-    app.register_blueprint(auth_bp, url_prefix='')
-    return app  
+    app.register_blueprint(auth_bp, url_prefix="")
+    return app

@@ -2,6 +2,7 @@ import uuid
 from functools import wraps
 
 from flask import jsonify, session
+
 from app.logs import logger
 
 

@@ -1,7 +1,7 @@
 # user_manager.py
 import json
-from typing import Dict
 from datetime import datetime
+from typing import Dict
 
 
 class AgentManager:

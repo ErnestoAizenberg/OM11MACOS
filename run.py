@@ -2,7 +2,7 @@ import os
 import subprocess
 
 from app import create_app
-from config import Config, RedisConfig, APIURLConfig
+from config import APIURLConfig, Config, RedisConfig
 
 if __name__ == "__main__":
     app_config = Config()

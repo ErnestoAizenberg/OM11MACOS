@@ -3,6 +3,7 @@ from typing import Optional
 
 from app.models import User
 
+
 class UserRepo:
     def __init__(self, db_session, logger: Optional[logging.Logger] = None):
         self.db_session = db_session
@@ -22,7 +23,9 @@ class UserRepo:
 
     def get_user_by_username(self, username: str) -> Optional[User]:
         self.logger.debug("Fetching user by username: %s", username)
-        user = self.db_session.query(User).filter(User.username == username).one_or_none()
+        user = (
+            self.db_session.query(User).filter(User.username == username).one_or_none()
+        )
         self.logger.debug("Found user: %s", user)
         return user
 
@@ -33,4 +36,3 @@ class UserRepo:
         self.db_session.commit()
         self.logger.debug("Created new user: %s", new_user)
         return new_user
-
