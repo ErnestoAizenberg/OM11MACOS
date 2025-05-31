@@ -109,46 +109,21 @@ document.addEventListener('DOMContentLoaded', function() {
   /**
    * Toggle dropdown visibility with animation
    */
-// Получение элементов
-const dropdownButton = document.getElementById('auth-dropdown-button');
-const dropdownPanel = document.getElementById('auth-dropdown-panel');
+elements.dropdown.button.addEventListener('click', () => {
+  const panel = elements.dropdown.panel;
 
-function toggleDropdown() {
-  const isHidden = dropdownPanel.classList.contains('hidden');
-
-  if (isHidden) {
+  if (panel.classList.contains('opacity-0')) {
     // Показываем
-    dropdownPanel.classList.remove('hidden');
-    // Анимация появления
-    dropdownPanel.classList.remove('opacity-0', 'scale-95');
-    dropdownPanel.classList.add('opacity-100', 'scale-100');
-
-    // Обновляем aria-expanded
-    dropdownButton.setAttribute('aria-expanded', 'true');
-
-    console.log('Dropdown shown');
+    panel.classList.remove('opacity-0', 'scale-95');
+    panel.classList.add('opacity-100', 'scale-100');
+    debugLog('Dropdown shown');
   } else {
     // Скрываем
-    dropdownPanel.classList.remove('opacity-100', 'scale-100');
-    dropdownPanel.classList.add('opacity-0', 'scale-95');
-
-    // После анимации можно скрывать полностью, но для простоты
-    // можно оставить так, или через setTimeout
-    // например, через 200ms добавить 'hidden', чтобы дать время анимации
-    setTimeout(() => {
-      dropdownPanel.classList.add('hidden');
-    }, 200);
-
-    // Обновляем aria-expanded
-    dropdownButton.setAttribute('aria-expanded', 'false');
-
-    console.log('Dropdown hidden');
+    panel.classList.remove('opacity-100', 'scale-100');
+    panel.classList.add('opacity-0', 'scale-95');
+    debugLog('Dropdown hidden');
   }
-  updateFormUI();
-}
-
-// Обработчик клика
-dropdownButton.addEventListener('click', toggleDropdown);
+});
   // ======================
   // Form Management
   // ======================
@@ -197,9 +172,8 @@ dropdownButton.addEventListener('click', toggleDropdown);
    * Toggle between login and signup modes
    */
   function toggleAuthMode() {
-    debugLog('Current auth mode before toggle:', STATE.authMode);
     STATE.authMode = STATE.authMode === 'login' ? 'signup' : 'login';
-    debugLog('New auth mode after toggle:', STATE.authMode);
+    debugLog('Auth mode changed to:', STATE.authMode);
     
     // Reset form fields
     DOM.form.reset();
@@ -330,7 +304,6 @@ dropdownButton.addEventListener('click', toggleDropdown);
    * @returns {Promise<Object>} Response data
    */
   async function submitAuthData() {
-    debugLog("Submiting form!");
     const endpoint = STATE.authMode === 'login' 
       ? CONFIG.API_ENDPOINTS.LOGIN 
       : CONFIG.API_ENDPOINTS.SIGNUP;
@@ -364,29 +337,27 @@ dropdownButton.addEventListener('click', toggleDropdown);
    * Handle successful authentication
    * @param {Object} data - Response data
    */
-function handleAuthSuccess(data) {
-  const isLogin = STATE.authMode === 'login';
-  const successMessage = CONFIG.UI_TEXT[isLogin ? 'LOGIN' : 'SIGNUP'].success;
-  
-  showSuccess(successMessage);
-
-  if (isLogin) {
-    debugLog('Redirecting to dashboard...');
-    setTimeout(() => {
-      window.location.href = data.redirectUrl || '/dashboard';
-    }, CONFIG.REDIRECT_DELAY);
-  } else {
-    debugLog('Switching to login form...');
-    // Immediately update the state
-    STATE.authMode = 'login';
+  function handleAuthSuccess(data) {
+    const isLogin = STATE.authMode === 'login';
+    const successMessage = CONFIG.UI_TEXT[isLogin ? 'LOGIN' : 'SIGNUP'].success;
     
-    // Only delay the UI updates
-    setTimeout(() => {
-      updateFormUI();
-      hideMessages();
-    }, CONFIG.FORM_SWITCH_DELAY);
+    showSuccess(successMessage);
+
+    if (isLogin) {
+      debugLog('Redirecting to dashboard...');
+      setTimeout(() => {
+        window.location.href = data.redirectUrl || '/dashboard';
+      }, CONFIG.REDIRECT_DELAY);
+    } else {
+      debugLog('Switching to login form...');
+      setTimeout(() => {
+        STATE.authMode = 'login';
+        updateFormUI();
+        hideMessages();
+      }, CONFIG.FORM_SWITCH_DELAY);
+    }
   }
-}
+
   // ======================
   // Event Handlers
   // ======================
@@ -396,7 +367,6 @@ function handleAuthSuccess(data) {
    * @param {Event} e - Submit event
    */
   async function handleSubmit(e) {
-    debugLog("Handling submit, STATE:", STATE);
     e.preventDefault();
     initializeForm();
 
@@ -412,7 +382,6 @@ function handleAuthSuccess(data) {
     const validation = validateForm();
     if (!validation.isValid) {
       showError(validation.errors, 'form validation');
-      debugLog("returning...");
       return;
     }
 
@@ -435,21 +404,30 @@ function handleAuthSuccess(data) {
   /**
    * Initialize event listeners
    */
-	function initEventListeners() {
-	  // Initialize form immediately
-	  initializeForm();
-	  
-	  // Dropdown toggle
-	  DOM.dropdown.button.addEventListener('click', toggleDropdown);
-	  
-	  // Auth mode toggle
-	  DOM.toggleAuth.addEventListener('click', debounce(toggleAuthMode, CONFIG.DEBOUNCE_DELAY));
-	  
-	  // Form submission
-	  DOM.form.addEventListener('submit', handleSubmit);
-	  
-	  debugLog('Event listeners initialized');
-	}
+  function initEventListeners() {
+    // Initialize form on first interaction
+    const initializeOnInteraction = () => {
+      initializeForm();
+      document.removeEventListener('click', initializeOnInteraction);
+      document.removeEventListener('keydown', initializeOnInteraction);
+      debugLog('Initialized via user interaction');
+    };
+
+    document.addEventListener('click', initializeOnInteraction);
+    document.addEventListener('keydown', initializeOnInteraction);
+
+    // Dropdown toggle
+    DOM.dropdown.button.addEventListener('click', toggleDropdown);
+
+    // Auth mode toggle
+    DOM.toggleAuth.addEventListener('click', debounce(toggleAuthMode, CONFIG.DEBOUNCE_DELAY));
+
+    // Form submission
+    DOM.form.addEventListener('submit', handleSubmit);
+
+    debugLog('Event listeners initialized');
+  }
+
   // Start the application
   initEventListeners();
   debugLog('Authentication system initialized');

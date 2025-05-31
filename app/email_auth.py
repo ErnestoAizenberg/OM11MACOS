@@ -36,6 +36,12 @@ def configure_email_auth(
             if not check_password_hash(user.password, password):
                 return jsonify({"message": "Invalid credentials"}), 401
 
+            if not user.is_verified:
+                return (
+                    jsonify({"message": "User is not verified, check email first"}),
+                    401,
+                )
+
             # 3. Create session
             session.clear()
             session["user_id"] = user.id
