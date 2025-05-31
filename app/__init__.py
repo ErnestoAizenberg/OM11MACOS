@@ -2,6 +2,7 @@ import os
 from typing import Callable
 
 import redis
+from config import APIURLConfig, Config, RedisConfig
 from flask import Flask
 
 from app.agent.agent_manager import AgentManager
@@ -20,19 +21,22 @@ from app.browser.browser_manager import (
     transform_profiles,
 )
 from app.email_auth import configure_email_auth
-from app.extensions import db, init_redis
+from app.email_service import EmailService
+from app.extensions import db, init_redis, limiter, mail
 from app.logs import logger
 from app.repos import UserRepo
 from app.telegram.api import TelegramClient, init_telegram_api
 from app.utils import generate_uuid_32, login_required
-from config import APIURLConfig, Config, RedisConfig
 
 init_redis: Callable[[RedisConfig], redis.Redis]
 init_telegram_api: Callable
 
 
 def create_app(
-    app_config: Config, api_url_config: APIURLConfig, redis_config: RedisConfig
+    app_config: Config,
+    api_url_config: APIURLConfig,
+    redis_config: RedisConfig,
+    mail_config,
 ) -> Flask:
     os.makedirs("instance", exist_ok=True)
 
@@ -44,6 +48,9 @@ def create_app(
     app.config["OAUTH2_PROVIDERS"] = app_config.get("OAUTH2_PROVIDERS")
 
     app.config["TEMPLATES_AUTO_RELOAD"] = True
+    app.config.update(mail_config)
+
+    limiter.init_app(app)
     db.init_app(app)
     with app.app_context():
         db.create_all()
@@ -56,12 +63,23 @@ def create_app(
     # Memory habdler for OM Agent
     agent_manager = AgentManager(redis_client)
 
+    agent_url: str = api_url_config.get("OM11", "")
     # For talking with OM11 microservice
-    manus_client = ManusClient(logger=logger, agent_url=api_url_config.get("OM11"))
+    manus_client = ManusClient(
+        logger=logger,
+        agent_url=agent_url,
+    )
     # For talking with OM11TG microservice
     telegram_client_instance = TelegramClient(
         logger=logger,
-        api_base_url=api_url_config.get("OM11TG"),
+        api_base_url=api_url_config.get("OM11TG", ""),
+    )
+    mail.init_app(app)
+    email_sender = "sereernest@gmail.com"
+    email_service_instance = EmailService(
+        mail=mail,
+        sender=email_sender,
+        logger=logger,
     )
 
     # Fir Holding user_agent_settings
@@ -99,6 +117,7 @@ def create_app(
         app=app,
         login_required=login_required,
         logger=logger,
+        limiter=limiter,
         telegram_client=telegram_client_instance,
     )
 
@@ -113,6 +132,7 @@ def create_app(
     configure_email_auth(
         app=app,
         user_repo=user_repo,
+        email_service=email_service_instance,
     )
     app.register_blueprint(auth_bp, url_prefix="")
     return app

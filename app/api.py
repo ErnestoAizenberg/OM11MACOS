@@ -8,6 +8,7 @@ def configure_api(
     user_repo,
     generate_uuid_32: callable,
 ):
+    @app.route("/dashboard")
     @app.route("/")
     def index():
         user_id = session.get("user_id", None)

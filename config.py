@@ -22,6 +22,16 @@ def parse_arguments():
     parser.add_argument("--redis_db", type=int, help="Redis database number.")
     parser.add_argument("--host", type=str, help="Server host.")
     parser.add_argument("--port", type=int, help="Server port.")
+    parser.add_argument(
+        "--mail_username",
+        type=str,
+        help="Mail username, which will send emails to users (my_email@example.com)",
+    )
+    parser.add_argument(
+        "--mail_password",
+        type=str,
+        help="Not your usual password, google on Jun 2025 won't allow you to use it, it should be generated and require 2FA",
+    )
 
     return parser.parse_args()
 
@@ -48,6 +58,17 @@ class APIURLConfig:
 
     def get(self, key, default=None):
         return getattr(self, key, default)
+
+
+mail_config = {
+    "MAIL_SERVER": os.getenv("MAIL_SERVER") or "smtp.gmail.com",
+    "MAIL_PORT": os.getenv("MAIL_PORT") or 587,
+    "MAIL_USE_TLS": os.getenv("MAIL_USE_TLS") or True,
+    "MAIL_USERNAME": args.mail_username
+    or os.getenv("MAIL_USERNAME")
+    or "sereernest@gmail.com",
+    "MAIL_PASSWORD": args.mail_password or os.getenv("MAIL_PASSWORD"),
+}
 
 
 class DefConfig:

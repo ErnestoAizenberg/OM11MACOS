@@ -1,4 +1,6 @@
 Flask
+flask_mail
+flask_limiter
 redis
 secure
 asgiref

@@ -1,13 +1,22 @@
-from flask import Flask, jsonify, request, session
+import logging
+import secrets
+from typing import Optional
+
+from flask import Flask, jsonify, redirect, request, session, url_for, abort
 from werkzeug.security import check_password_hash, generate_password_hash
 
+from app.email_service import EmailService
 from app.repos import UserRepo
 
 
 def configure_email_auth(
     app: Flask,
     user_repo: UserRepo,
+    email_service: EmailService,
+    logger: Optional[logging.Logger] = None,
 ):
+    logger = logger or logging.getLogger(__name__)
+
     @app.route("/api/login", methods=["POST"])
     def login():
         try:
@@ -41,7 +50,7 @@ def configure_email_auth(
             )
 
         except Exception as e:
-            raise Exception(f"An error: {str(e)}")
+            logger.error(f"An error while login: {str(e)}")
             return jsonify({"message": "Server error"}), 500
 
     # Signup endpoint
@@ -67,15 +76,24 @@ def configure_email_auth(
 
             # 2. Hash password and create user
             hashed_password = generate_password_hash(password)
-            new_user = user_repo.create_user(
-                username=name, email=email, password=hashed_password
+            user_data_dict = {
+                "username": name,
+                "email": email,
+                "password": hashed_password,
+                "verification_token": secrets.token_urlsafe(32),
+            }
+            new_user = user_repo.create_user(user_data_dict)
+
+            # 3. Send verification email
+            verification_token: str = new_user.verification_token
+            verification_link: str = url_for(
+                "verify", token=verification_token, _external=True
             )
-
-            # 3. Automatically log in the new user
-            session.clear()
-            session["user_id"] = new_user.id
-            session.permanent = True
-
+            email_service.send_verification_email(
+                verification_link=verification_link,
+                username=new_user.username,
+                email=new_user.email,
+            )
             # 4. Return success
             return (
                 jsonify(
@@ -92,8 +110,37 @@ def configure_email_auth(
             )
 
         except Exception as e:
-            raise Exception(f"An error occured: {str(e)}")
+            logger.error(f"An error occured while sign up: {str(e)}")
             return jsonify({"message": "Server error"}), 500
+
+    @app.route("/verify/<token>", methods=["GET"])
+    def verify(token):
+        user = user_repo.get_user_by_verification_token(token)
+        if not user:
+            logger.error("Not tge valid token provided")
+            abort(403)
+
+        true_verification_token = user.verification_token
+
+        if token == true_verification_token:
+            user.is_verified = True
+            data_for_update = {
+                "id": user.id,
+                "verification_token": None,
+                "is_verified": True,
+            }
+            verified_user = user_repo.update(data_for_update)
+
+            # Automatically log in the user
+            session.clear()
+            session["user_id"] = verified_user.id
+            session.permanent = True
+
+            logger.info("User verified successfully.")
+            return redirect("/")
+
+        logger.warning("User auth token is nit correct")
+        return redirect("/")
 
     # Logout endpoint
     # @app.route('/api/logout', methods=['POST'])

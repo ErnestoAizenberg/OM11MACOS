@@ -4,10 +4,52 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OpenManus Agent</title>
+  
+  <!-- Preload critical resources -->
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
+  
+  <!-- CSS resources -->
+  <link rel="preload" href="https://cdn.tailwindcss.com" as="script">
+  <link rel="preload" href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" as="style">
+  <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
+  
+  <!-- Load stylesheets -->
   <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet">
+  <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
   <link href="/static/css/style.css" rel="stylesheet">
+  
+  <!-- Loading styles -->
+  <style>
+    #loading-overlay {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(255, 255, 255, 0.9);
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      z-index: 9999;
+    }
+    
+    .loading-spinner {
+      width: 50px;
+      height: 50px;
+      border: 5px solid #f3f3f3;
+      border-top: 5px solid #3498db;
+      border-radius: 50%;
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes spin {
+      0% { transform: rotate(0deg); }
+      100% { transform: rotate(360deg); }
+    }
+  </style>
+
   <script src="https://cdn.tailwindcss.com"></script>
-  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
   <script>
     tailwind.config = {
       theme: {
@@ -25,7 +67,12 @@
   </script>
 </head>
 <body class="bg-base-200 min-h-screen">
-  <div class="container mx-auto p-4">
+  <!-- Loading overlay - shown by default -->
+  <div id="loading-overlay">
+    <div class="loading-spinner"></div>
+  </div>
+
+  <div id="app", style="display: none;" class="container mx-auto p-4">
     <!-- macOS-style window -->
     <div class="bg-base-100 rounded-lg shadow-xl overflow-hidden border border-base-300 max-w-5xl mx-auto">
       <!-- Window header -->
@@ -176,6 +223,23 @@
     </div>
   </div>
 
-  <script type="module" src="/static/js/app.js"></script> 
+
+  <script type="module" src="/static/js/app.js"></script>
+  <script>
+    // Hide loading when everything is ready
+    window.addEventListener('DOMContentLoaded', (event) => {
+      // Optional: wait for fonts to load
+      document.fonts.ready.then(() => {
+        document.getElementById('loading-overlay').style.display = 'none';
+        document.getElementById('app').style.display = 'block';
+      });
+    });
+
+    // Fallback in case fonts don't load
+    setTimeout(() => {
+      document.getElementById('loading-overlay').style.display = 'none';
+      document.getElementById('app').style.display = 'block';
+    }, 3000);
+  </script>
 </body>
 </html>

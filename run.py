@@ -2,7 +2,7 @@ import os
 import subprocess
 
 from app import create_app
-from config import APIURLConfig, Config, RedisConfig
+from config import APIURLConfig, Config, RedisConfig, mail_config
 
 if __name__ == "__main__":
     app_config = Config()
@@ -10,6 +10,7 @@ if __name__ == "__main__":
         app_config=app_config,
         api_url_config=APIURLConfig(),
         redis_config=RedisConfig(),
+        mail_config=mail_config,
     )
     redis_run = os.getenv("REDIS_RUN", "true").lower() == "true"
     if redis_run:

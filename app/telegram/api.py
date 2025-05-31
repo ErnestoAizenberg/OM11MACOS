@@ -2,14 +2,7 @@ import logging
 
 import requests
 from flask import Flask, jsonify, request, session
-
-# Configure logging
-logger = logging.getLogger(__name__)
-logger.setLevel(logging.INFO)  # Set to DEBUG for more detailed logs
-handler = logging.StreamHandler()
-formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
-handler.setFormatter(formatter)
-logger.addHandler(handler)
+from flask_limiter import Limiter
 
 
 class TelegramClient:
@@ -67,7 +60,10 @@ class TelegramClient:
             )
             return False
         except requests.RequestException as e:
-            self.logger.exception(f"Connection test exception: {e}")
+            self.logger.exception(
+                f"Connection test exception: {type(e).__name__}, please ensure the Telegram service is runnin at {self.api_base_url}"
+            )
+
             return False
 
     def send_message(self, message: str, user_uuid: str) -> bool:
@@ -122,8 +118,9 @@ class TelegramClient:
         """Get connection status."""
         url = f"{self.api_base_url}/api/telegram/status"
         params = {"user_id": user_id}
+        self.logger.info(f"Fetching status for user_id={user_id}")
+
         try:
-            self.logger.info(f"Fetching status for user_id={user_id}")
             response = requests.get(url, params=params)
             response.raise_for_status()
             data = response.json()
@@ -135,7 +132,10 @@ class TelegramClient:
             )
             return {"success": False, "error": "Connection error"}
         except requests.RequestException as e:
-            self.logger.exception(f"Failed to fetch status: {e}")
+            self.logger.exception(
+                f"Failed to fetch status: {type(e).__name__}, Please ensure the Telegram service is running at {self.api_base_url}"
+            )
+
             return {"success": False, "error": str(e)}
 
 
@@ -144,6 +144,7 @@ def init_telegram_api(
     login_required: callable,
     logger: logging.Logger,
     telegram_client: TelegramClient,
+    limiter: Limiter,
 ):
     @app.route("/api/telegram/connect", methods=["POST"])
     def setup_webhook():
@@ -200,8 +201,14 @@ def init_telegram_api(
             return jsonify({"success": False, "error": "Failed to disconnect"}), 500
 
     @app.route("/api/telegram/status", methods=["GET"])
+    @limiter.limit("20 per second")
     def status():
         user_id = session.get("user_id")
-        logger.info(f"Received status request for user_id={user_id}")
+        if not user_id:
+            logger.warning("Unauthorized access attempt to /status")
+            return jsonify({"error": "Unauthorized"}), 401
+
+        logger.info(f"Status request for user_id={user_id}")
         status_info = telegram_client.get_status(user_id)
+        logger.info(f"status_info: {status_info}")
         return jsonify(status_info)

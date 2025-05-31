@@ -30,6 +30,14 @@ class User(db.Model):
         db.DateTime,
         default=datetime.utcnow,
     )
+    verification_token = db.Column(
+        db.String(32),
+        nullable=True,
+    )
+    is_verified = db.Column(
+        db.Boolean(),
+        default=False,
+    )
 
     def __repr__(self):
-        return f"<User id={self.id} username={self.username} email={self.email}>"
+        return f"<User id={self.id} username={self.username} email={self.email} verified={self.is_verified}>"

@@ -1,11 +1,13 @@
-<div class="relative inline-block, text-center" id="auth-dropdown">
+<div class="relative inline-block text-center" id="auth-dropdown">
   <!-- Trigger button -->
   <button
     id="auth-dropdown-button"
-    class="inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ml-4"
+    aria-haspopup="true"
+    aria-expanded="false"
+    class="inline-flex justify-center items-center px-4 py-2 text-sm font-medium text-gray-700 border border-gray-300 rounded-md shadow-sm hover:bg-gray-50 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 ml-4 transition-colors duration-150"
   >
     Account
-    <svg class="w-5 h-5 ml-2 -mr-1" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor">
+    <svg class="w-5 h-5 ml-2 -mr-1 transition-transform duration-200" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 20 20" fill="currentColor" aria-hidden="true">
       <path fill-rule="evenodd" d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" clip-rule="evenodd" />
     </svg>
   </button>
@@ -13,32 +15,45 @@
   <!-- Dropdown panel -->
   <div
     id="auth-dropdown-panel"
-    class="hidden absolute left-0 bot-0 z-10 w-72 mt-2 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none fixed items-center justify-center p-4 z-50"
+    aria-labelledby="auth-dropdown-button"
+    class="hidden absolute right-0 mt-2 w-72 origin-top-right bg-white rounded-md shadow-lg ring-1 ring-black ring-opacity-5 focus:outline-none z-50 transition-all duration-200 transform opacity-0 scale-95"
   >
     <div class="px-4 py-3">
       <h3 class="text-sm font-medium text-gray-700" id="auth-form-title">Sign in to your account</h3>
     </div>
-    
+
     <div class="px-4 py-3 border-t border-gray-100">
-      <form id="auth-form" class="space-y-4">
+      <form id="auth-form" method="POST" class="space-y-4">
         <!-- Error/Success messages -->
-        <div id="auth-error" class="hidden p-2 text-sm text-red-700 bg-red-100 rounded-md">
-          <p id="error-message"></p>
+        <div id="auth-error" class="hidden p-3 text-sm text-red-700 bg-red-100 rounded-md">
+          <p id="error-message" class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8v4m0 4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span></span>
+          </p>
         </div>
-        <div id="auth-success" class="hidden p-2 text-sm text-green-700 bg-green-100 rounded-md">
-          <p id="success-message"></p>
+        
+        <div id="auth-success" class="hidden p-3 text-sm text-green-700 bg-green-100 rounded-md">
+          <p id="success-message" class="flex items-center">
+            <svg class="w-4 h-4 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <span></span>
+          </p>
         </div>
 
         <!-- Name field (only for signup) -->
-        <div id="name-field" class="hidden">
+        <div id="name-field" class="hidden transition-all duration-200">
           <label for="name" class="block text-sm font-medium text-gray-700">Full Name</label>
           <input
             type="text"
             id="name"
             name="name"
-            class="block w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            class="block w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-150"
             placeholder="John Doe"
             required
+            autocomplete="name"
           />
         </div>
 
@@ -49,12 +64,13 @@
             type="email"
             id="email"
             name="email"
-            class="block w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            class="block w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-150"
             placeholder="your@email.com"
             required
+            autocomplete="email"
           />
         </div>
-        
+
         <!-- Password field -->
         <div>
           <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
@@ -62,36 +78,37 @@
             type="password"
             id="password"
             name="password"
-            class="block w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500"
+            class="block w-full px-3 py-2 mt-1 text-sm border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-indigo-500 focus:border-indigo-500 transition-colors duration-150"
             placeholder="••••••••"
             required
             minlength="6"
+            autocomplete="current-password"
           />
         </div>
-        
+
         <!-- Submit button -->
         <div class="flex items-center justify-between">
           <button
             type="submit"
             id="submit-button"
-            class="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500"
+            class="flex items-center justify-center px-4 py-2 text-sm font-medium text-white bg-indigo-600 rounded-md hover:bg-indigo-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-indigo-500 transition-colors duration-150"
           >
             <span id="button-text">Sign In</span>
           </button>
-          
-          <a href="#" id="forgot-password" class="text-sm text-indigo-600 hover:text-indigo-500">Forgot password?</a>
+
+          <a href="#" id="forgot-password" class="text-sm text-indigo-600 hover:text-indigo-500 transition-colors duration-150">Forgot password?</a>
         </div>
       </form>
     </div>
-    
+
     <!-- Toggle between login/signup -->
     <div class="px-4 py-3 bg-gray-50 border-t border-gray-100 rounded-b-md">
       <p class="text-xs text-gray-500">
         <span id="toggle-message">Don't have an account? </span>
-        <button id="toggle-auth" class="font-medium text-indigo-600 hover:text-indigo-500">Sign up</button>
+        <button id="toggle-auth" class="font-medium text-indigo-600 hover:text-indigo-500 transition-colors duration-150">Sign up</button>
       </p>
     </div>
   </div>
 </div>
 
-<script src="/static/js/auth.js"></script>	
+<script src="/static/js/auth.js"></script>
