@@ -1,8 +1,10 @@
 Flask
 flask_mail
 flask_limiter
+flask_sqlalchemy
 redis
 secure
 asgiref
 requests
 dotenv
+
