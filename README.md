@@ -8,6 +8,7 @@ OM11MACOS communicate with OM11TG and open-manus-agent microservices.
 git clone https://github.com/ErnestoAizenberg/OM11MACOS.git && cd OM11MACOS && pip install -r requirements.txt && python run.py
 ```
 You will be able to set the ports and some configuration up during run, but you can just press Enter for the default.
+Then the app will run on: http://localhost:5000/
 
 ### Telegram:
 https://github.com/ErnestoAizenberg/OM11TG
