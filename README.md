@@ -1,31 +1,22 @@
 # OM11MACOS
-An Open Manus Agent MacOS UI
 
-GATEWAY API for web interface.
-OM11MACOS communicate with OM11TG and open-manus-agent microservices.
+macOS Web UI for Open Manus Agent  
+
+Gateway API for web interface that communicates with OM11TG and open-manus-agent microservices.
+
+## Quick Start
 
 ```shell
-git clone https://github.com/ErnestoAizenberg/OM11MACOS.git && cd OM11MACOS && pip install -r requirements.txt && python run.py
+git clone https://github.com/ErnestoAizenberg/OM11MACOS.git
+cd OM11MACOS
+pip install -r requirements.txt
+python run.py
 ```
-You will be able to set the ports and some configuration up during run, but you can just press Enter for the default.
-Then the app will run on: http://localhost:5000/
 
-### Telegram:
-https://github.com/ErnestoAizenberg/OM11TG
+- Configure ports during setup (press Enter for defaults)
+- Access the UI at: http://localhost:5000/
 
-### Open Manus Agebnt (Browser + LLM)
-https://github.com/ErnestoAizenberg/open-manus-agent
+## Related Components
 
-
-
-
-
-
-
-
-
-
-
-
-
-
+- **Telegram Integration**: [OM11TG](https://github.com/ErnestoAizenberg/OM11TG)
+- **Core Agent**: [open-manus-agent](https://github.com/ErnestoAizenberg/open-manus-agent) (Browser + LLM management)
