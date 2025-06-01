@@ -178,8 +178,6 @@ Checks if the current session is authenticated.
 4. **Check Status** → `GET /check-auth`  
 
 ---
-
-🚀 **Tips:**  
 For production, add:  
 - Rate limiting (`flask-limiter`)  
 - CSRF protection (`flask-wtf`)  
