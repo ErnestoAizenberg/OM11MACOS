@@ -179,7 +179,7 @@ Checks if the current session is authenticated.
 
 ---
 
-🚀 **Pro Tip:**  
+🚀 **Tips:**  
 For production, add:  
 - Rate limiting (`flask-limiter`)  
 - CSRF protection (`flask-wtf`)  
