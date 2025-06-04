@@ -1,3 +1,5 @@
+[![WEB TRINITY](https://img.shields.io/badge/-WEB%20TRINITY-111111?style=for-the-badge&logo=html5&logoColor=E34F26&labelColor=000000&color=111111&animation=glow&link=https://developer.mozilla.org)](https://developer.mozilla.org)
+
 ![Python](https://img.shields.io/badge/Python-3.7-ff69b4) ![Flask](https://img.shields.io/badge/Flask-2.2.5-ff9e00) ![Flask-SQLAlchemy](https://img.shields.io/badge/Flask--SQLAlchemy-3.1.1-00cc88) ![redis](https://img.shields.io/badge/redis-latest-cc0000)
 # OM11MACOS
 
