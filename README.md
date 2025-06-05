@@ -1,7 +1,7 @@
-[![WEB TRINITY](https://img.shields.io/badge/-WEB%20TRINITY-111111?style=for-the-badge&logo=html5&logoColor=E34F26&labelColor=000000&color=111111&link=https://developer.mozilla.org)](https://developer.mozilla.org) 
-[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black&labelColor=101010&color=F7DF1E&link=https://en.wikipedia.org/wiki/JavaScript)](https://en.wikipedia.org/wiki/JavaScript) 
-[![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white&labelColor=101010&color=1572B6&link=https://en.wikipedia.org/wiki/CSS)](https://en.wikipedia.org/wiki/CSS)
-[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=FFD43B&labelColor=3776AB&color=FFD43B&link=https://www.python.org/)](https://www.python.org/)![Flask](https://img.shields.io/badge/Flask-2.2.5-ff9e00) ![Flask-SQLAlchemy](https://img.shields.io/badge/Flask--SQLAlchemy-3.1.1-00cc88) ![redis](https://img.shields.io/badge/redis-latest-cc0000)
+[![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white&labelColor=101010&color=E34F26)](https://developer.mozilla.org/en-US/docs/Web/HTML) 
+[![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black&labelColor=101010)](https://developer.mozilla.org/en-US/docs/Web/JavaScript) 
+[![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white&labelColor=101010)](https://developer.mozilla.org/en-US/docs/Web/CSS)
+[![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=FFD43B)](https://www.python.org/)![Flask](https://img.shields.io/badge/Flask-2.2.5-ff9e00) ![Flask-SQLAlchemy](https://img.shields.io/badge/Flask--SQLAlchemy-3.1.1-00cc88) ![redis](https://img.shields.io/badge/redis-latest-cc0000)
 # OM11MACOS
 
 macOS Web UI for Open Manus Agent  
