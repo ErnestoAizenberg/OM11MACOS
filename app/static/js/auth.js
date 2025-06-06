@@ -67,6 +67,9 @@ document.addEventListener('DOMContentLoaded', function() {
     submitButton: document.getElementById('submit-button')
   };
 
+
+  debugLog('Toggle Auth Element:', DOM.toggleAuth);
+
   // ======================
   // Application State
   // ======================

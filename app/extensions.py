@@ -1,7 +1,6 @@
 import redis
 from flask_limiter import Limiter
 from flask_limiter.util import get_remote_address
-from flask_mail import Mail
 from flask_sqlalchemy import SQLAlchemy
 
 limiter = Limiter(
@@ -9,7 +8,6 @@ limiter = Limiter(
     default_limits=["100/hour"],
 )
 
-mail = Mail()
 db = SQLAlchemy()
 
 

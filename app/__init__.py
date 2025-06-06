@@ -22,7 +22,7 @@ from app.browser.browser_manager import (
 )
 from app.email_auth import configure_email_auth
 from app.email_service import EmailService
-from app.extensions import db, init_redis, limiter, mail
+from app.extensions import db, init_redis, limiter
 from app.logs import logger
 from app.repos import UserRepo
 from app.telegram.api import TelegramClient, init_telegram_api
@@ -48,7 +48,6 @@ def create_app(
     app.config["OAUTH2_PROVIDERS"] = app_config.get("OAUTH2_PROVIDERS")
 
     app.config["TEMPLATES_AUTO_RELOAD"] = True
-    app.config.update(mail_config)
 
     limiter.init_app(app)
     db.init_app(app)
@@ -74,12 +73,14 @@ def create_app(
         logger=logger,
         api_base_url=api_url_config.get("OM11TG", ""),
     )
-    mail.init_app(app)
-    email_sender = "sereernest@gmail.com"
+    # email_sender = "sereernest@gmail.com"
     email_service_instance = EmailService(
-        mail=mail,
-        sender=email_sender,
-        logger=logger,
+        smtp_server=mail_config.get("MAIL_SERVER"),
+        smtp_port=mail_config.get("MAIL_PORT"),
+        smtp_username=mail_config.get("MAIL_USERNAME"),
+        smtp_password=mail_config.get("MAIL_PASSWORD"),
+        sender=mail_config.get("MAIL_USERNAME"),
+        use_tls=mail_config.get("MAIL_USE_TLS"),
     )
 
     # Fir Holding user_agent_settings

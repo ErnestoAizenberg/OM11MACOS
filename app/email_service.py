@@ -1,26 +1,60 @@
 import logging
+import smtplib
+from email.mime.text import MIMEText
+from email.mime.multipart import MIMEMultipart
 from threading import Thread
 from typing import Optional
 
 from flask import current_app, render_template
-from flask_mail import Message
 
 
 class EmailService:
-    def __init__(self, mail, sender: str, logger: Optional[logging.Logger] = None):
+    def __init__(
+        self,
+        smtp_server: str,
+        smtp_port: int,
+        smtp_username: str,
+        smtp_password: str,
+        sender: str,
+        use_tls: bool = True,
+        logger: Optional[logging.Logger] = None,
+    ):
         """
-        Initialize EmailService.
+        Initialize EmailService with SMTP configuration.
 
         Args:
-            mail: Flask-Mail instance
+            smtp_server: SMTP server address
+            smtp_port: SMTP server port
+            smtp_username: SMTP username
+            smtp_password: SMTP password
             sender: Email address to send from
-            logger: Optional logger instance (will create one if not provided)
+            use_tls: Whether to use TLS (default: True)
+            logger: Optional logger instance
         """
-        self.mail = mail
+        self.smtp_server = smtp_server
+        self.smtp_port = smtp_port
+        self.smtp_username = smtp_username
+        self.smtp_password = smtp_password
         self.sender = sender
+        self.use_tls = use_tls
         self.logger = logger or logging.getLogger(__name__)
 
-    def send_async_email(self, app, msg: Message) -> None:
+    def _send_email(self, msg: MIMEMultipart) -> None:
+        """
+        Internal method to send email using SMTP.
+        """
+        try:
+            with smtplib.SMTP(self.smtp_server, self.smtp_port) as server:
+                if self.use_tls:
+                    server.starttls()
+                server.login(self.smtp_username, self.smtp_password)
+                server.send_message(msg)
+            self.logger.info(f"Email sent successfully to {msg['To']}")
+        except Exception as e:
+            self.logger.error(f"Failed to send email to {msg['To']}: {str(e)}")
+            raise
+
+    def send_async_email(self, app, msg: MIMEMultipart) -> None:
         """
         Send email asynchronously.
 
@@ -30,11 +64,26 @@ class EmailService:
         """
         try:
             with app.app_context():
-                self.mail.send(msg)
-            self.logger.info(f"Email sent successfully to {msg.recipients}")
+                self._send_email(msg)
         except Exception as e:
-            self.logger.error(f"Failed to send email to {msg.recipients}: {str(e)}")
+            self.logger.error(f"Async email failed: {str(e)}")
             raise
+
+    def _create_message(
+        self, subject: str, recipients: list[str], html_content: str
+    ) -> MIMEMultipart:
+        """
+        Create MIME email message with HTML content.
+        """
+        msg = MIMEMultipart("alternative")
+        msg["Subject"] = subject
+        msg["From"] = self.sender
+        msg["To"] = ", ".join(recipients)
+
+        # Attach HTML content
+        msg.attach(MIMEText(html_content, "html"))
+
+        return msg
 
     def send_verification_email(
         self,
@@ -45,12 +94,6 @@ class EmailService:
     ) -> None:
         """
         Send email verification email.
-
-        Args:
-            verification_link: Link for email verification
-            username: Recipient's username
-            email: Recipient's email address
-            subject: Optional custom subject
         """
         html_content = render_template(
             "emails/verify_email.html",
@@ -59,12 +102,7 @@ class EmailService:
         )
 
         subject = subject or "Verify Your Email"
-        msg = Message(
-            subject=subject,
-            sender=self.sender,
-            recipients=[email],
-        )
-        msg.html = html_content
+        msg = self._create_message(subject, [email], html_content)
 
         self.logger.info(f"Sending verification email to {email}")
         Thread(
@@ -92,12 +130,6 @@ class EmailService:
     ) -> None:
         """
         Send password reset email.
-
-        Args:
-            reset_link: Link for password reset
-            email: Recipient's email address
-            username: Recipient's username
-            subject: Optional custom subject
         """
         html_content = render_template(
             "emails/reset_password.html",
@@ -106,12 +138,7 @@ class EmailService:
         )
 
         subject = subject or "Reset Your Password"
-        msg = Message(
-            subject=subject,
-            sender=self.sender,
-            recipients=[email],
-        )
-        msg.html = html_content
+        msg = self._create_message(subject, [email], html_content)
 
         self.logger.info(f"Sending password reset email to {email}")
         Thread(
@@ -126,11 +153,6 @@ class EmailService:
     ) -> None:
         """
         Send welcome email after registration.
-
-        Args:
-            username: Recipient's username
-            email: Recipient's email address
-            subject: Optional custom subject
         """
         html_content = render_template(
             "emails/welcome_email.html",
@@ -138,12 +160,7 @@ class EmailService:
         )
 
         subject = subject or "Welcome to Our Platform!"
-        msg = Message(
-            subject=subject,
-            sender=self.sender,
-            recipients=[email],
-        )
-        msg.html = html_content
+        msg = self._create_message(subject, [email], html_content)
 
         self.logger.info(f"Sending welcome email to {email}")
         Thread(
