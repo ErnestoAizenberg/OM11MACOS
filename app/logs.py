@@ -92,6 +92,7 @@ def setup_logger(
     
     return logger
 
+logger = setup_logger(log_file="app.log")
 
 # Example usage
 if __name__ == "__main__":
