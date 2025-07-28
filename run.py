@@ -1,4 +1,5 @@
 import os
+import shutil
 import subprocess
 
 from app import create_app
@@ -16,7 +17,13 @@ if __name__ == "__main__":
     if redis_run:
         print("Running Redis...")
         try:
-            subprocess.run(["redis-server", "--daemonize", "yes"], check=True)
+            if shutil.which("redis-server") is not None:
+                subprocess.run(["redis-server", "--daemonize", "yes"], check=True)
+            else:
+                raise RuntimeError(
+                    "redis server is not installed you can do it via: sudo apt install redis-server or pkg install redis"
+                )
+                
         except PermissionError:
             raise RuntimeError(
                 "redis server is not installed you can do it via: sudo apt install redis-server or pkg install redis"
