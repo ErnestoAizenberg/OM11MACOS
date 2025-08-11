@@ -1,7 +1,7 @@
 Flask
 flask_limiter
 flask_sqlalchemy
-redis
+#redis
 secure
 asgiref
 requests

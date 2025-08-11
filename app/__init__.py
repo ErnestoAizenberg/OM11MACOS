@@ -5,7 +5,7 @@ import redis
 from config import APIURLConfig, Config, RedisConfig
 from flask import Flask
 
-from app.agent.agent_manager import AgentManager
+from app.agent.agent_manager_sq import AgentManager
 from app.agent.api import configure_agent_api
 from app.agent.manus_client import ManusClient
 from app.agent.settings.api import configure_agent_settings
@@ -35,7 +35,7 @@ init_telegram_api: Callable
 def create_app(
     app_config: Config,
     api_url_config: APIURLConfig,
-    redis_config: RedisConfig,
+    #redis_config: RedisConfig,
     mail_config,
 ) -> Flask:
     os.makedirs("instance", exist_ok=True)
@@ -54,13 +54,14 @@ def create_app(
     with app.app_context():
         db.create_all()
 
-    redis_client = init_redis(redis_config)
+    #redis_client = init_redis(redis_config)
     user_repo = UserRepo(db.session, logger)
 
     app.user_repo = user_repo
 
     # Memory habdler for OM Agent
-    agent_manager = AgentManager(redis_client)
+    #agent_manager = AgentManager(redis_client)
+    agent_manager = AgentManager('users.db')
 
     agent_url: str = api_url_config.get("OM11", "")
     # For talking with OM11 microservice
@@ -126,9 +127,10 @@ def create_app(
     configure_api(
         app=app,
         logger=logger,
-        redis_client=redis_client,
+        #redis_client=redis_client,
         user_repo=user_repo,
         generate_uuid_32=generate_uuid_32,
+        agent_manager=agent_manager,
     )
     configure_email_auth(
         app=app,

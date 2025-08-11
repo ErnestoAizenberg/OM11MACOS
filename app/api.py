@@ -1,12 +1,12 @@
 from flask import render_template, session
-
+from datetime import datetime
 
 def configure_api(
     app,
     logger,
-    redis_client,
     user_repo,
     generate_uuid_32: callable,
+    agent_manager  # Добавлен параметр AgentManager
 ):
     @app.route("/dashboard")
     @app.route("/")
@@ -39,9 +39,6 @@ def configure_api(
     def before_request():
         logger.info(f"user_id in session={session.get('user_id')}")
         if "user_id" not in session:
-            # session["user_id"] = generate_uuid_32()
-            # redis_client.hset(
-            #    f"user:{session['user_id']}", "created_at", datetime.now().isoformat()
-            # )
-            # logger.info(f"New session initialized for user {session['user_id']}")
-            pass
+            session["user_id"] = generate_uuid_32()
+            agent_manager.initialize_user(session["user_id"])  # Используем AgentManager вместо Redis
+            logger.info(f"New session initialized for user {session['user_id']} using SQLite")
