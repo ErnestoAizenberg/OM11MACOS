@@ -6,9 +6,18 @@ export function toggleTheme() {
   state.theme = newTheme;
   document.documentElement.setAttribute('data-theme', newTheme);
   localStorage.setItem('openmanus-theme', newTheme);
-  
-  const icon = elements.themeToggleBtn.querySelector('i');
-  icon.className = newTheme === 'night' ? 'fas fa-adjust' : 'fas fa-moon';
+
+  const themeToggleBtn = document.getElementById('themeToggleBtn');
+  const moonIcon = themeToggleBtn.querySelector('#moon-icon'); // Используем ID вместо класса
+  const adjustIcon = themeToggleBtn.querySelector('#adjust-icon'); // Используем ID вместо класса
+
+  if (newTheme === 'night') {
+    moonIcon.style.display = 'none';
+    adjustIcon.style.display = 'block';
+  } else {
+    moonIcon.style.display = 'block';
+    adjustIcon.style.display = 'none';
+  }
 }
 
 export function loadTheme() {
@@ -16,8 +25,17 @@ export function loadTheme() {
   if (savedTheme) {
     state.theme = savedTheme;
     document.documentElement.setAttribute('data-theme', savedTheme);
-    
-    const icon = elements.themeToggleBtn.querySelector('i');
-    icon.className = savedTheme === 'night' ? 'fas fa-adjust' : 'fas fa-moon';
+
+    const themeToggleBtn = document.getElementById('themeToggleBtn');
+    const moonIcon = themeToggleBtn.querySelector('#moon-icon');
+    const adjustIcon = themeToggleBtn.querySelector('#adjust-icon');
+
+    if (savedTheme === 'night') {
+      moonIcon.style.display = 'none';
+      adjustIcon.style.display = 'block';
+    } else {
+      moonIcon.style.display = 'block';
+      adjustIcon.style.display = 'none';
+    }
   }
 }

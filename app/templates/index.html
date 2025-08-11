@@ -4,21 +4,20 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>OpenManus Agent</title>
-  
+
   <!-- Preload critical resources -->
-  <link rel="preconnect" href="https://cdn.jsdelivr.net">
-  <link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>
-  
+  {#<link rel="preconnect" href="https://cdn.jsdelivr.net">#}
+  {#<link rel="preconnect" href="https://cdnjs.cloudflare.com" crossorigin>#}
+
   <!-- CSS resources -->
-  <link rel="preload" href="https://cdn.tailwindcss.com" as="script">
   <link rel="preload" href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" as="style">
   <link rel="preload" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" as="style">
-  
+
   <!-- Load stylesheets -->
   <link href="https://cdn.jsdelivr.net/npm/daisyui@latest/dist/full.css" rel="stylesheet">
   <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" rel="stylesheet">
-  <link href="/static/css/style.css" rel="stylesheet">
-  
+  <link href="/static/dist/css/styles.css" rel="stylesheet">
+
   <!-- Loading styles -->
   <style>
     #loading-overlay {
@@ -33,7 +32,7 @@
       align-items: center;
       z-index: 9999;
     }
-    
+
     .loading-spinner {
       width: 50px;
       height: 50px;
@@ -42,14 +41,14 @@
       border-radius: 50%;
       animation: spin 1s linear infinite;
     }
-    
+
     @keyframes spin {
       0% { transform: rotate(0deg); }
       100% { transform: rotate(360deg); }
     }
   </style>
 
-  <script src="https://cdn.tailwindcss.com"></script>
+  {#
   <script>
     tailwind.config = {
       theme: {
@@ -64,7 +63,7 @@
         }
       }
     }
-  </script>
+  </script>#}
 </head>
 <body class="bg-base-200 min-h-screen">
   <!-- Loading overlay - shown by default -->
@@ -84,9 +83,14 @@
         </div>
         <div class="mx-auto font-semibold text-sm">OpenManus Agent</div>
         <div class="flex space-x-2">
-          <button id="themeToggleBtn" class="btn btn-circle btn-ghost btn-xs">
-            <i class="fas fa-adjust"></i>
-          </button>
+        <button id="themeToggleBtn" class="btn btn-circle btn-ghost btn-xs">
+  <svg id="adjust-icon" class="adjust-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <path d="M8 256c0 136.966 111.033 248 248 248s248-111.034 248-248S392.966 8 256 8 8 119.033 8 256zm248 184V72c101.705 0 184 82.311 184 184 0 101.705-82.311 184-184 184z"/>
+  </svg>
+  <svg id="moon-icon" class="moon-icon" style="display: none;" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512">
+    <path d="M283.211 512c78.962 0 151.079-35.925 198.857-94.792 7.068-8.708-.639-21.43-11.562-19.35-124.203 23.654-238.262-71.576-238.262-196.954 0-72.222 38.662-138.635 101.498-174.394 9.686-5.512 7.25-20.197-3.756-22.23A258.156 258.156 0 0 0 283.211 0c-141.309 0-256 114.511-256 256 0 141.309 114.511 256 256 256z"/>
+  </svg>
+</button>
         </div>
       </div>
 
@@ -106,32 +110,36 @@
         <div class="w-full md:w-64 bg-base-200 p-4 border-r border-base-300">
           <div class="flex flex-col space-y-4">
             <h2 class="text-lg font-bold mb-2">Agent Controls</h2>
-            
+
             <!-- Status indicator -->
             <div class="flex items-center mb-4">
               <div id="agentStatusIndicator" class="w-3 h-3 rounded-full bg-red-500 mr-2"></div>
               <span id="agentStatusText" class="text-sm">Agent Offline</span>
             </div>
-            
+
             <!-- Control buttons -->
             <button id="startAgentBtn" class="btn btn-primary w-full">
-              <i class="fas fa-play mr-2"></i> Start Agent
+              <svg  class="mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 384 512" width="16" height="16" fill="currentColor">
+  <path d="M73 39c-14.8-9.1-33.4-9.4-48.5-.9S0 62.6 0 80V432c0 17.4 9.4 33.4 24.5 41.9s33.7 8.1 48.5-.9L361 297c14.3-8.7 23-24.2 23-41s-8.7-32.2-23-41L73 39z"/>
+</svg> Start Agent
             </button>
-            
+
             <button id="openTelegramConnectMenu" class="btn btn-outline w-full">
-              <i class="fas fa-paper-plane mr-2"></i> Connect Telegram
+              <!--<i class="fas fa-paper-plane mr-2"></i>--><svg class="fas mr-2" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" fill="currentColor" width="16" height="16">
+  <path d="M498.1 5.6c10.1 7 15.4 19.1 13.5 31.2l-64 416c-1.5 9.7-7.4 18.2-16 23s-18.9 5.4-28 1.6L284 427.7l-68.5 74.1c-8.9 9.7-22.9 12.9-35.2 8.1S160 493.2 160 480V396.4c0-4 1.5-7.8 4.2-10.7L331.8 202.8c5.8-6.3 5.6-16-.4-22s-15.7-6.4-22-.7L106 360.8 17.7 316.6C7.1 311.3 .3 300.7 0 288.9s5.9-22.8 16.1-28.7l448-256c10.7-6.1 23.9-5.5 34 1.4z"/>
+</svg> Connect Telegram
             </button>
             {% include 'includes/telegram_conntect_form.html' %}
             <button id="connectBrowserBtn" class="btn btn-outline w-full">
               <i class="fas fa-globe mr-2"></i> Connect Browser
             </button>
-            
+
             {% include 'includes/browser_menu.html' %}
 	    {% if not user_id %}
 	    {% include 'includes/auth.html' %}           {% include 'includes/email_auth.html' %}
 	    {% endif %}
             <div class="divider"></div>
-            
+
             <!-- Settings section -->
             <h3 class="text-md font-semibold">Settings</h3>
             <div class="form-control">
@@ -140,14 +148,14 @@
                 <input id="debugModeToggle" type="checkbox" class="toggle toggle-primary" />
               </label>
             </div>
-            
+
             <div class="form-control">
               <label class="label cursor-pointer">
                 <span class="label-text">Auto-start</span>
                 <input id="autoStartToggle" type="checkbox" class="toggle toggle-primary" />
               </label>
             </div>
-            
+
             <div class="form-control">
               <label class="label cursor-pointer">
                 <span class="label-text">Notifications</span>
@@ -156,7 +164,7 @@
             </div>
           </div>
         </div>
-        
+
         <!-- Main panel -->
         <div class="flex-1 p-4">
           <!-- Command input -->
@@ -169,7 +177,7 @@
               </button>
             </div>
           </div>
-          
+
           <!-- Command history -->
           <div class="mb-6">
             <div class="flex justify-between items-center mb-3">
@@ -193,7 +201,7 @@
               </div>
             </div>
           </div>
-          
+
           <!-- Connection status -->
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div class="card bg-base-200">
@@ -206,7 +214,7 @@
                 <div class="text-xs opacity-70 mt-2">Connect to receive and send messages via Telegram</div>
               </div>
             </div>
-            
+
             <div class="card bg-base-200">
               <div class="card-body p-4">
                 <h3 class="card-title text-sm">Browser API</h3>
