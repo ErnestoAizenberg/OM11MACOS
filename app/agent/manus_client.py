@@ -27,7 +27,7 @@ class ManusClient:
 
     def agent_status(self, user_id: str) -> bool:
         try:
-            params = {"user_id": user_id}
+            params = {"user_uuid": user_id}
             response = requests.get(
                 f"{self.agent_url}/api/check-agent-status", params=params
             )

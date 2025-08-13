@@ -45,7 +45,7 @@ def create_app(
     app.secret_key = app_config.get("SECRET_KEY")
     app.config["SQLALCHEMY_DATABASE_URI"] = "sqlite:///app.db"
     app.config["SQLALCHEMY_TRACK_MODIFICATIONS"] = False
-    app.config["OAUTH2_PROVIDERS"] = app_config.get("OAUTH2_PROVIDERS")
+    app.config["OAUTH2_PROVIDERS"] = app_config.OAUTH2_PROVIDERS
 
     app.config["TEMPLATES_AUTO_RELOAD"] = True
 
@@ -63,7 +63,8 @@ def create_app(
     #agent_manager = AgentManager(redis_client)
     agent_manager = AgentManager('users.db')
 
-    agent_url: str = api_url_config.get("OM11", "")
+     
+    agent_url: str = api_url_config.OM11
     # For talking with OM11 microservice
     manus_client = ManusClient(
         logger=logger,
@@ -72,16 +73,16 @@ def create_app(
     # For talking with OM11TG microservice
     telegram_client_instance = TelegramClient(
         logger=logger,
-        api_base_url=api_url_config.get("OM11TG", ""),
+        api_base_url=api_url_config.OM11TG,
     )
     # email_sender = "sereernest@gmail.com"
     email_service_instance = EmailService(
-        smtp_server=mail_config.get("MAIL_SERVER"),
-        smtp_port=mail_config.get("MAIL_PORT"),
-        smtp_username=mail_config.get("MAIL_USERNAME"),
-        smtp_password=mail_config.get("MAIL_PASSWORD"),
-        sender=mail_config.get("MAIL_USERNAME"),
-        use_tls=mail_config.get("MAIL_USE_TLS"),
+        smtp_server=mail_config.MAIL_SERVER,
+        smtp_port=mail_config.MAIL_PORT,
+        smtp_username=mail_config.MAIL_USERNAME,
+        smtp_password=mail_config.MAIL_PASSWORD,
+        sender=mail_config.MAIL_USERNAME,
+        use_tls=mail_config.MAIL_USE_TLS,
     )
 
     # Fir Holding user_agent_settings
@@ -108,7 +109,7 @@ def create_app(
         app=app,
         logger=logger,
         BrowserManagerClass=BrowserManager,
-        AGENT_ADDRESS=api_url_config.get("OM11TG"),
+        AGENT_ADDRESS=api_url_config.OM11,
         get_user_profiles_fn=get_user_profiles,
         save_user_profiles_fn=save_user_profiles,
         transform_profiles_fn=transform_profiles,
