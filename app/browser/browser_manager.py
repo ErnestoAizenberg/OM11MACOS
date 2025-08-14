@@ -18,6 +18,8 @@ formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(messag
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
+class UndetectableError(Exception):
+    pass
 
 class BrowserManager:
     BROWSER_CONFIGS_DIR = Path("instance/browser_configs")
@@ -114,6 +116,11 @@ class BrowserManager:
             )
             raise
 
+    def check_profile(
+        self, user_id: str, api_url: str, profile_id: str, browser_type: str
+    ):
+        pass
+    
     def start_profile(
         self, user_id: str, api_url: str, profile_id: str, browser_type: str
     ) -> Dict:
@@ -282,33 +289,46 @@ class BrowserManager:
     ) -> Dict:
         logger.debug(f"Starting Undetectable profile {profile_id}")
         try:
+            headers = {
+                'Accept': 'application/json',
+                'Content-Type': 'application/json'
+            }
+            resp = requests.get(f"{api_url}/profile/getinfo/{profile_id}", headers=headers)
+            resp_json = resp.json()
+
+            check_undertactable_response(resp_json)
+            data = resp_json['data']
+            if data.get('status') == "Started":
+                ws_url = data["websocket_link"]
+                return {"ws_url": ws_url}
+
             url = f"{api_url}/profile/start/{urllib.parse.quote(profile_id)}"
+            
             params = {}
             if headless:
                 params["--headless"] = "new"
             if chrome_flags:
                 params["chrome_flags"] = chrome_flags
 
-            headers = {"Accept": "application/json"}
             logger.debug(f"GET to {url} with params: {params}")
 
             response, error = self._make_request(
                 "GET", url, params=params, headers=headers
             )
             logger.debug(response.json())
+
             if error:
                 raise error
+ 
 
-            data = response.json()
+            resp_json = response.json()
+            check_undertactable_response(resp_json)
             ws_url = None
+            data = resp_json.get('data')
 
             if data.get("websocket_link"):
                 ws_url = data["websocket_link"]
-            # Case 2: websocket_link nested in data field (already running)
-            elif isinstance(data.get("data"), dict) and data["data"].get(
-                "websocket_link"
-            ):
-                ws_url = data["data"]["websocket_link"]
+   
             if not ws_url:
                 error_msg = (
                     "No websocket_link in Undetectable response." + f"Response: {data}"
@@ -600,3 +620,18 @@ def transform_profiles(raw_profiles: List[Dict], browser_type: str) -> List[Dict
     except Exception as e:
         logger.error(f"Error transforming profiles: {str(e)}", exc_info=True)
         raise
+
+
+def check_undertactable_response(response):
+    code = response.get('code')
+    if code == 0:
+        return
+    elif code == 1:
+        data = response.get("data")
+        if not data:
+            raise ValueError("Invalid Undetectable response")
+        error = data.get("error")
+        if not error:
+            raise ValueError("UnkownError: error code 1, but error is {error}")
+        raise UndetectableError("Undetectable browser return error: {error}")
+                    
