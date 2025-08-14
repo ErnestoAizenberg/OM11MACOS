@@ -87,10 +87,15 @@ class AppRunner:
             import webview
 
             logger.info(f"Starting WebView for {host}:{port}")
-            self.webview_thread = threading.Thread(
-                target=self.create_window, args=(host, port), daemon=True
+            webview.create_window(
+                title=self.title,
+                url=f"http://{host}:{port}",
+                width=1200,
+                height=800,
+                min_size=(800, 600)
             )
-            self.webview_thread.start()
+            webview.start()
+
         except ImportError:
             logger.warning("WebView package not available, running in headless mode")
             self.run_ui = False
