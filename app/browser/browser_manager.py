@@ -1,4 +1,3 @@
-
 import json
 import logging
 import urllib.parse
@@ -15,7 +14,7 @@ logger.setLevel(logging.DEBUG)  # Set to DEBUG for maximum verbosity
 # Create console handler with a higher log level
 ch = logging.StreamHandler()
 ch.setLevel(logging.DEBUG)
-formatter = logging.Formatter('%(asctime)s - %(name)s - %(levelname)s - %(message)s')
+formatter = logging.Formatter("%(asctime)s - %(name)s - %(levelname)s - %(message)s")
 ch.setFormatter(formatter)
 logger.addHandler(ch)
 
@@ -29,7 +28,9 @@ class BrowserManager:
         logger.info("Initializing BrowserManager")
         try:
             self.BROWSER_CONFIGS_DIR.mkdir(parents=True, exist_ok=True)
-            logger.debug(f"Created/verified config directory at {self.BROWSER_CONFIGS_DIR}")
+            logger.debug(
+                f"Created/verified config directory at {self.BROWSER_CONFIGS_DIR}"
+            )
         except Exception as e:
             logger.error(f"Failed to create config directory: {str(e)}", exc_info=True)
             raise
@@ -39,31 +40,37 @@ class BrowserManager:
         try:
             logger.debug(f"Response status: {response.status_code}")
             logger.debug(f"Response headers: {response.headers}")
-            
+
             try:
                 if response.text:  # Only try to parse if there's content
-                    logger.debug(f"Response body: {response.text[:500]}...")  # Log first 500 chars
+                    logger.debug(
+                        f"Response body: {response.text[:500]}..."
+                    )  # Log first 500 chars
             except Exception as e:
                 logger.warning(f"Could not log response body: {str(e)}")
         except Exception as e:
             logger.error(f"Failed to log response details: {str(e)}", exc_info=True)
 
-    def _make_request(self, method: str, url: str, **kwargs) -> Tuple[Optional[requests.Response], Optional[Exception]]:
+    def _make_request(
+        self, method: str, url: str, **kwargs
+    ) -> Tuple[Optional[requests.Response], Optional[Exception]]:
         """Generic request method with comprehensive logging and error handling."""
         logger.debug(f"Making {method.upper()} request to {url}")
         try:
-            kwargs.setdefault('timeout', self.REQUEST_TIMEOUT)
+            kwargs.setdefault("timeout", self.REQUEST_TIMEOUT)
             response = requests.request(method, url, **kwargs)
             self._log_response_details(response)
             response.raise_for_status()
             return response, None
         except requests.exceptions.RequestException as e:
             logger.error(f"Request failed to {url}: {str(e)}", exc_info=True)
-            if hasattr(e, 'response') and e.response:
+            if hasattr(e, "response") and e.response:
                 self._log_response_details(e.response)
             return None, e
         except Exception as e:
-            logger.error(f"Unexpected error during request to {url}: {str(e)}", exc_info=True)
+            logger.error(
+                f"Unexpected error during request to {url}: {str(e)}", exc_info=True
+            )
             return None, e
 
     def fetch_profiles(self, api_url: str, browser_type: str) -> List[Dict]:
@@ -84,29 +91,35 @@ class BrowserManager:
             raise ValueError(error_msg)
 
         response, error = self._make_request(
-            'GET',
-            endpoint,
-            headers={"Content-Type": "application/json"}
+            "GET", endpoint, headers={"Content-Type": "application/json"}
         )
-        
+
         if error:
             raise error
 
         try:
             profiles = transform_profiles(response.json(), browser_type)
-            logger.info(f"Successfully fetched {len(profiles)} profiles for {browser_type}")
+            logger.info(
+                f"Successfully fetched {len(profiles)} profiles for {browser_type}"
+            )
             return profiles
         except ValueError as e:
-            logger.error(f"Invalid JSON response from {browser_type}: {str(e)}", exc_info=True)
+            logger.error(
+                f"Invalid JSON response from {browser_type}: {str(e)}", exc_info=True
+            )
             raise
         except Exception as e:
-            logger.error(f"Unexpected error processing profiles: {str(e)}", exc_info=True)
+            logger.error(
+                f"Unexpected error processing profiles: {str(e)}", exc_info=True
+            )
             raise
 
     def start_profile(
         self, user_id: str, api_url: str, profile_id: str, browser_type: str
     ) -> Dict:
-        logger.info(f"Starting profile {profile_id} for user {user_id} (type: {browser_type})")
+        logger.info(
+            f"Starting profile {profile_id} for user {user_id} (type: {browser_type})"
+        )
         if not all([api_url, profile_id, browser_type]):
             error_msg = "Missing required parameters"
             logger.error(error_msg)
@@ -115,7 +128,7 @@ class BrowserManager:
         try:
             profiles = get_user_profiles(user_id)
             logger.debug(f"Current profiles for user {user_id}: {len(profiles)}")
-            
+
             start_methods = {
                 "octo": self._start_octo_profile,
                 "dolphin": self._start_dolphin_profile,
@@ -132,7 +145,7 @@ class BrowserManager:
 
             logger.debug(f"Calling start method for {browser_type}")
             result = start_methods[browser_type](api_url, profile_id)
-            
+
             if not result.get("ws_url"):
                 error_msg = "No WebSocket URL returned from start method"
                 logger.error(error_msg)
@@ -146,10 +159,10 @@ class BrowserManager:
                 "started_at": datetime.now().isoformat(),
             }
             profiles.append(new_profile)
-            
+
             logger.debug(f"Saving updated profiles for user {user_id}")
             save_user_profiles(user_id, profiles)
-            
+
             logger.info(f"Successfully started profile {profile_id}")
             return result
         except Exception as e:
@@ -163,27 +176,34 @@ class BrowserManager:
             if not profiles:
                 logger.debug("No profiles found to disconnect")
                 return
-                
+
             logger.debug(f"Found {len(profiles)} profiles to disconnect")
-            
+
             success_count = 0
             for profile in profiles:
                 try:
-                    logger.debug(f"Stopping profile {profile['id']} ({profile['browser']})")
+                    logger.debug(
+                        f"Stopping profile {profile['id']} ({profile['browser']})"
+                    )
                     stop_method = getattr(self, f"_stop_{profile['browser']}_profile")
                     stop_method(profile["api_url"], profile["id"])
                     success_count += 1
                     logger.debug(f"Successfully stopped profile {profile['id']}")
                 except Exception as e:
-                    logger.error(f"Error stopping profile {profile['id']}: {str(e)}", exc_info=True)
+                    logger.error(
+                        f"Error stopping profile {profile['id']}: {str(e)}",
+                        exc_info=True,
+                    )
 
             logger.debug("Clearing user profiles")
             save_user_profiles(user_id, [])
-            
+
             logger.debug("Cleaning up old configs")
             self._cleanup_old_configs()
-            
-            logger.info(f"Disconnected {success_count}/{len(profiles)} profiles for user {user_id}")
+
+            logger.info(
+                f"Disconnected {success_count}/{len(profiles)} profiles for user {user_id}"
+            )
         except Exception as e:
             logger.error(f"Failed to disconnect all profiles: {str(e)}", exc_info=True)
             raise
@@ -194,11 +214,11 @@ class BrowserManager:
             url = f"{api_url}/api/v1/profile/{profile_id}/start"
             payload = {"headless": False}
             logger.debug(f"POST to {url} with payload: {payload}")
-            
-            response, error = self._make_request('POST', url, json=payload)
+
+            response, error = self._make_request("POST", url, json=payload)
             if error:
                 raise error
-            
+
             ws_url = f"ws://{api_url.split('//')[1]}/ws/{profile_id}"
             logger.debug(f"Octo profile started, WS URL: {ws_url}")
             return {"ws_url": ws_url}
@@ -211,17 +231,17 @@ class BrowserManager:
         try:
             url = f"{api_url}/profile/{profile_id}/start"
             logger.debug(f"POST to {url}")
-            
-            response, error = self._make_request('POST', url)
+
+            response, error = self._make_request("POST", url)
             if error:
                 raise error
-            
+
             data = response.json()
             if not data.get("ws_url"):
                 error_msg = "No WebSocket URL in Dolphin response"
                 logger.error(error_msg)
                 raise ValueError(error_msg)
-                
+
             ws_url = data["ws_url"]
             logger.debug(f"Dolphin profile started, WS URL: {ws_url}")
             return {"ws_url": ws_url}
@@ -234,17 +254,17 @@ class BrowserManager:
         try:
             url = f"{api_url}/gologin/profile/{profile_id}/start"
             logger.debug(f"POST to {url}")
-            
-            response, error = self._make_request('POST', url)
+
+            response, error = self._make_request("POST", url)
             if error:
                 raise error
-            
+
             data = response.json()
             if not data.get("debuggerAddress"):
                 error_msg = "No debuggerAddress in GoLogin response"
                 logger.error(error_msg)
                 raise ValueError(error_msg)
-                
+
             ws_url = data["debuggerAddress"]
             logger.debug(f"GoLogin profile started, WS URL: {ws_url}")
             return {"ws_url": ws_url}
@@ -271,29 +291,37 @@ class BrowserManager:
 
             headers = {"Accept": "application/json"}
             logger.debug(f"GET to {url} with params: {params}")
-            
-            response, error = self._make_request('GET', url, params=params, headers=headers)
+
+            response, error = self._make_request(
+                "GET", url, params=params, headers=headers
+            )
             logger.debug(response.json())
             if error:
                 raise error
-            
+
             data = response.json()
             ws_url = None
 
             if data.get("websocket_link"):
                 ws_url = data["websocket_link"]
             # Case 2: websocket_link nested in data field (already running)
-            elif isinstance(data.get("data"), dict) and data["data"].get("websocket_link"):
+            elif isinstance(data.get("data"), dict) and data["data"].get(
+                "websocket_link"
+            ):
                 ws_url = data["data"]["websocket_link"]
             if not ws_url:
-                error_msg = "No websocket_link in Undetectable response." + f"Response: {data}"
+                error_msg = (
+                    "No websocket_link in Undetectable response." + f"Response: {data}"
+                )
                 logger.error(error_msg)
                 raise ValueError(error_msg)
-  
+
             logger.debug(f"Undetectable profile started, WS URL: {ws_url}")
             return {"ws_url": ws_url}
         except Exception as e:
-            logger.error(f"Failed to start Undetectable profile: {str(e)}", exc_info=True)
+            logger.error(
+                f"Failed to start Undetectable profile: {str(e)}", exc_info=True
+            )
             raise
 
     def _start_vision_profile(self, api_url: str, profile_id: str) -> Dict:
@@ -302,11 +330,11 @@ class BrowserManager:
             url = f"{api_url}/api/v1/profile/{profile_id}/start"
             payload = {"headless": False}
             logger.debug(f"POST to {url} with payload: {payload}")
-            
-            response, error = self._make_request('POST', url, json=payload)
+
+            response, error = self._make_request("POST", url, json=payload)
             if error:
                 raise error
-            
+
             ws_url = f"ws://{api_url.split('//')[1]}/ws/{profile_id}"
             logger.debug(f"Vision profile started, WS URL: {ws_url}")
             return {"ws_url": ws_url}
@@ -320,17 +348,17 @@ class BrowserManager:
             url = f"{api_url}/api/profile/{profile_id}/start"
             payload = {"headless": False}
             logger.debug(f"POST to {url} with payload: {payload}")
-            
-            response, error = self._make_request('POST', url, json=payload)
+
+            response, error = self._make_request("POST", url, json=payload)
             if error:
                 raise error
-            
+
             data = response.json()
             if not data.get("wsEndpoint"):
                 error_msg = "No wsEndpoint in Linken response"
                 logger.error(error_msg)
                 raise ValueError(error_msg)
-                
+
             ws_url = data["wsEndpoint"]
             logger.debug(f"Linken profile started, WS URL: {ws_url}")
             return {"ws_url": ws_url}
@@ -343,11 +371,11 @@ class BrowserManager:
         try:
             url = f"{api_url}/api/v1/profile/{profile_id}/stop"
             logger.debug(f"POST to {url}")
-            
-            _, error = self._make_request('POST', url)
+
+            _, error = self._make_request("POST", url)
             if error:
                 raise error
-                
+
             logger.debug(f"Octo profile {profile_id} stopped successfully")
         except Exception as e:
             logger.error(f"Failed to stop Octo profile: {str(e)}", exc_info=True)
@@ -358,11 +386,11 @@ class BrowserManager:
         try:
             url = f"{api_url}/profile/{profile_id}/stop"
             logger.debug(f"POST to {url}")
-            
-            _, error = self._make_request('POST', url)
+
+            _, error = self._make_request("POST", url)
             if error:
                 raise error
-                
+
             logger.debug(f"Dolphin profile {profile_id} stopped successfully")
         except Exception as e:
             logger.error(f"Failed to stop Dolphin profile: {str(e)}", exc_info=True)
@@ -373,11 +401,11 @@ class BrowserManager:
         try:
             url = f"{api_url}/gologin/profile/{profile_id}/stop"
             logger.debug(f"POST to {url}")
-            
-            _, error = self._make_request('POST', url)
+
+            _, error = self._make_request("POST", url)
             if error:
                 raise error
-                
+
             logger.debug(f"GoLogin profile {profile_id} stopped successfully")
         except Exception as e:
             logger.error(f"Failed to stop GoLogin profile: {str(e)}", exc_info=True)
@@ -388,14 +416,16 @@ class BrowserManager:
         try:
             url = f"{api_url}/api/profile/{profile_id}/stop"
             logger.debug(f"POST to {url}")
-            
-            _, error = self._make_request('POST', url)
+
+            _, error = self._make_request("POST", url)
             if error:
                 raise error
-                
+
             logger.debug(f"Undetectable profile {profile_id} stopped successfully")
         except Exception as e:
-            logger.error(f"Failed to stop Undetectable profile: {str(e)}", exc_info=True)
+            logger.error(
+                f"Failed to stop Undetectable profile: {str(e)}", exc_info=True
+            )
             raise
 
     def _stop_vision_profile(self, api_url: str, profile_id: str):
@@ -403,11 +433,11 @@ class BrowserManager:
         try:
             url = f"{api_url}/api/v1/profile/{profile_id}/stop"
             logger.debug(f"POST to {url}")
-            
-            _, error = self._make_request('POST', url)
+
+            _, error = self._make_request("POST", url)
             if error:
                 raise error
-                
+
             logger.debug(f"Vision profile {profile_id} stopped successfully")
         except Exception as e:
             logger.error(f"Failed to stop Vision profile: {str(e)}", exc_info=True)
@@ -418,11 +448,11 @@ class BrowserManager:
         try:
             url = f"{api_url}/api/profile/{profile_id}/stop"
             logger.debug(f"POST to {url}")
-            
-            _, error = self._make_request('POST', url)
+
+            _, error = self._make_request("POST", url)
             if error:
                 raise error
-                
+
             logger.debug(f"Linken profile {profile_id} stopped successfully")
         except Exception as e:
             logger.error(f"Failed to stop Linken profile: {str(e)}", exc_info=True)
@@ -433,7 +463,7 @@ class BrowserManager:
         try:
             cutoff = datetime.now() - timedelta(days=self.CONFIG_CLEANUP_DAYS)
             logger.debug(f"Removing configs older than {cutoff}")
-            
+
             removed_count = 0
             for config_file in self.BROWSER_CONFIGS_DIR.glob("*.json"):
                 try:
@@ -443,9 +473,14 @@ class BrowserManager:
                         config_file.unlink()
                         removed_count += 1
                 except Exception as e:
-                    logger.error(f"Error processing config {config_file}: {str(e)}", exc_info=True)
-                    
-            logger.info(f"Config cleanup completed. Removed {removed_count} old configs")
+                    logger.error(
+                        f"Error processing config {config_file}: {str(e)}",
+                        exc_info=True,
+                    )
+
+            logger.info(
+                f"Config cleanup completed. Removed {removed_count} old configs"
+            )
         except Exception as e:
             logger.error(f"Error during config cleanup: {str(e)}", exc_info=True)
             raise
@@ -470,10 +505,14 @@ def get_user_profiles(user_id: str) -> List[Dict]:
             logger.debug(f"Loaded {len(profiles)} profiles for user {user_id}")
             return profiles
     except json.JSONDecodeError as e:
-        logger.error(f"Invalid JSON in config file for user {user_id}: {str(e)}", exc_info=True)
+        logger.error(
+            f"Invalid JSON in config file for user {user_id}: {str(e)}", exc_info=True
+        )
         return []
     except IOError as e:
-        logger.error(f"Error reading config file for user {user_id}: {str(e)}", exc_info=True)
+        logger.error(
+            f"Error reading config file for user {user_id}: {str(e)}", exc_info=True
+        )
         return []
 
 
@@ -485,7 +524,9 @@ def save_user_profiles(user_id: str, profiles: List[Dict]):
             json.dump(profiles, f, indent=2)
         logger.debug(f"Profiles saved successfully for user {user_id}")
     except IOError as e:
-        logger.error(f"Error saving profiles for user {user_id}: {str(e)}", exc_info=True)
+        logger.error(
+            f"Error saving profiles for user {user_id}: {str(e)}", exc_info=True
+        )
         raise
 
 
@@ -497,7 +538,7 @@ def transform_profiles(raw_profiles: List[Dict], browser_type: str) -> List[Dict
         if browser_type == "octo":
             if not isinstance(raw_profiles, list):
                 raise ValueError("Expected list for Octo profiles")
-                
+
             for profile in raw_profiles:
                 transformed.append(
                     {"id": profile["uuid"], "name": profile["name"], "browser": "octo"}
@@ -505,7 +546,7 @@ def transform_profiles(raw_profiles: List[Dict], browser_type: str) -> List[Dict
         elif browser_type == "dolphin":
             if not isinstance(raw_profiles, list):
                 raise ValueError("Expected list for Dolphin profiles")
-                
+
             for profile in raw_profiles:
                 transformed.append(
                     {"id": profile["id"], "name": profile["name"], "browser": "dolphin"}
@@ -513,7 +554,7 @@ def transform_profiles(raw_profiles: List[Dict], browser_type: str) -> List[Dict
         elif browser_type == "gologin":
             if not isinstance(raw_profiles, dict) or "data" not in raw_profiles:
                 raise ValueError("Expected data field in GoLogin response")
-                
+
             for profile in raw_profiles["data"]:
                 transformed.append(
                     {"id": profile["id"], "name": profile["name"], "browser": "gologin"}
@@ -521,7 +562,7 @@ def transform_profiles(raw_profiles: List[Dict], browser_type: str) -> List[Dict
         elif browser_type == "undetectable":
             if not isinstance(raw_profiles, dict) or "data" not in raw_profiles:
                 raise ValueError("Expected data field in Undetectable response")
-                
+
             for profile_id, profile in raw_profiles.get("data", {}).items():
                 transformed.append(
                     {
@@ -533,7 +574,7 @@ def transform_profiles(raw_profiles: List[Dict], browser_type: str) -> List[Dict
         elif browser_type == "vision":
             if not isinstance(raw_profiles, list):
                 raise ValueError("Expected list for Vision profiles")
-                
+
             for profile in raw_profiles:
                 transformed.append(
                     {"id": profile["id"], "name": profile["name"], "browser": "vision"}
@@ -541,7 +582,7 @@ def transform_profiles(raw_profiles: List[Dict], browser_type: str) -> List[Dict
         elif browser_type == "linken":
             if not isinstance(raw_profiles, dict) or "profiles" not in raw_profiles:
                 raise ValueError("Expected profiles field in Linken response")
-                
+
             for profile in raw_profiles["profiles"]:
                 transformed.append(
                     {"id": profile["id"], "name": profile["name"], "browser": "linken"}

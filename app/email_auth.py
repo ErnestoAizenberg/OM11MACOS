@@ -2,7 +2,7 @@ import logging
 import secrets
 from typing import Optional
 
-from flask import Flask, jsonify, redirect, request, session, url_for, abort
+from flask import Flask, abort, jsonify, redirect, request, session, url_for
 from werkzeug.security import check_password_hash, generate_password_hash
 
 from app.email_service import EmailService

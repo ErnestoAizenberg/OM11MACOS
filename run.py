@@ -92,7 +92,7 @@ class AppRunner:
                 url=f"http://{host}:{port}",
                 width=1200,
                 height=800,
-                min_size=(800, 600)
+                min_size=(800, 600),
             )
             webview.start()
 

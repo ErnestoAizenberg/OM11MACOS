@@ -2,31 +2,27 @@ import os
 from typing import Callable
 
 import redis
-from config import APIURLConfig, Config, RedisConfig
 from flask import Flask
 
 from app.agent.agent_manager_sq import AgentManager
 from app.agent.api import configure_agent_api
 from app.agent.manus_client import ManusClient
 from app.agent.settings.api import configure_agent_settings
-
 # from app.telegram.api_client import TelegramClient
 from app.api import configure_api
 from app.auth import auth_bp
 from app.browser.api import configure_browser_api
-from app.browser.browser_manager import (
-    BrowserManager,
-    get_user_profiles,
-    save_user_profiles,
-    transform_profiles,
-)
+from app.browser.browser_manager import (BrowserManager, get_user_profiles,
+                                         save_user_profiles,
+                                         transform_profiles)
 from app.email_auth import configure_email_auth
 from app.email_service import EmailService
-from app.extensions import db, init_redis, limiter
+from app.extensions import db, limiter  # , init_redis
 from app.logs import logger
 from app.repos import UserRepo
 from app.telegram.api import TelegramClient, init_telegram_api
 from app.utils import generate_uuid_32, login_required
+from config import APIURLConfig, Config, RedisConfig
 
 init_redis: Callable[[RedisConfig], redis.Redis]
 init_telegram_api: Callable
@@ -35,7 +31,7 @@ init_telegram_api: Callable
 def create_app(
     app_config: Config,
     api_url_config: APIURLConfig,
-    #redis_config: RedisConfig,
+    # redis_config: RedisConfig,
     mail_config,
 ) -> Flask:
     os.makedirs("instance", exist_ok=True)
@@ -54,16 +50,15 @@ def create_app(
     with app.app_context():
         db.create_all()
 
-    #redis_client = init_redis(redis_config)
+    # redis_client = init_redis(redis_config)
     user_repo = UserRepo(db.session, logger)
 
     app.user_repo = user_repo
 
     # Memory habdler for OM Agent
-    #agent_manager = AgentManager(redis_client)
-    agent_manager = AgentManager('users.db')
+    # agent_manager = AgentManager(redis_client)
+    agent_manager = AgentManager("users.db")
 
-     
     agent_url: str = api_url_config.OM11
     # For talking with OM11 microservice
     manus_client = ManusClient(
@@ -128,7 +123,7 @@ def create_app(
     configure_api(
         app=app,
         logger=logger,
-        #redis_client=redis_client,
+        # redis_client=redis_client,
         user_repo=user_repo,
         generate_uuid_32=generate_uuid_32,
         agent_manager=agent_manager,

@@ -1,18 +1,17 @@
 # user_manager.py
 import json
 import sqlite3
-from datetime import datetime
-from typing import Dict, Optional, Tuple, List, Any
-from contextlib import contextmanager
 import threading
+from contextlib import contextmanager
+from datetime import datetime, timedelta
+from typing import Any, Dict, List, Optional, Tuple
 from uuid import uuid4
-import os
 
 
 class SQLiteStorage:
     """Потокобезопасное хранилище на основе SQLite с поддержкой Redis-подобного интерфейса"""
 
-    def __init__(self, db_path: str = 'agent_manager.db'):
+    def __init__(self, db_path: str = "agent_manager.db"):
         self.db_path = db_path
         self._lock = threading.Lock()
         self._init_db()
@@ -44,7 +43,8 @@ class SQLiteStorage:
         """Инициализация структуры базы данных"""
         with self._get_cursor() as cursor:
             # Таблица для хранения пользовательских данных
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS user_data (
                     user_id TEXT NOT NULL,
                     field TEXT NOT NULL,
@@ -52,10 +52,12 @@ class SQLiteStorage:
                     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
                     PRIMARY KEY (user_id, field)
                 )
-            """)
+            """
+            )
 
             # Таблица для хранения истории команд (оптимизированная структура)
-            cursor.execute("""
+            cursor.execute(
+                """
                 CREATE TABLE IF NOT EXISTS command_history (
                     id TEXT PRIMARY KEY,
                     user_id TEXT NOT NULL,
@@ -65,31 +67,44 @@ class SQLiteStorage:
                     timestamp TIMESTAMP NOT NULL,
                     FOREIGN KEY (user_id) REFERENCES user_data(user_id)
                 )
-            """)
+            """
+            )
 
             # Индексы для ускорения запросов
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_user_data ON user_data(user_id)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_command_history_user ON command_history(user_id)")
-            cursor.execute("CREATE INDEX IF NOT EXISTS idx_command_history_timestamp ON command_history(timestamp)")
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_user_data ON user_data(user_id)"
+            )
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_command_history_user ON command_history(user_id)"
+            )
+            cursor.execute(
+                "CREATE INDEX IF NOT EXISTS idx_command_history_timestamp ON command_history(timestamp)"
+            )
 
     def hset(self, key: str, field: str, value: Any) -> int:
         """Установка значения поля хеша"""
         with self._get_cursor() as cursor:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT OR REPLACE INTO user_data (user_id, field, value)
                 VALUES (?, ?, ?)
-            """, (key, field, str(value)))
+            """,
+                (key, field, str(value)),
+            )
             return cursor.rowcount
 
     def hget(self, key: str, field: str) -> Optional[str]:
         """Получение значения поля хеша"""
         with self._get_cursor() as cursor:
-            cursor.execute("""
+            cursor.execute(
+                """
                 SELECT value FROM user_data
                 WHERE user_id = ? AND field = ?
-            """, (key, field))
+            """,
+                (key, field),
+            )
             result = cursor.fetchone()
-            return result['value'] if result else None
+            return result["value"] if result else None
 
     def hexists(self, key: str, field: str) -> bool:
         """Проверка существования поля хеша"""
@@ -98,30 +113,38 @@ class SQLiteStorage:
     def hdel(self, key: str, field: str) -> int:
         """Удаление поля хеша"""
         with self._get_cursor() as cursor:
-            cursor.execute("""
+            cursor.execute(
+                """
                 DELETE FROM user_data
                 WHERE user_id = ? AND field = ?
-            """, (key, field))
+            """,
+                (key, field),
+            )
             return cursor.rowcount
 
     def save_command(self, user_id: str, command_data: Dict) -> str:
         """Специальный метод для сохранения команды в оптимизированную таблицу"""
         command_id = str(uuid4())
         with self._get_cursor() as cursor:
-            cursor.execute("""
+            cursor.execute(
+                """
                 INSERT INTO command_history (id, user_id, is_user, command, status, timestamp)
                 VALUES (?, ?, ?, ?, ?, ?)
-            """, (
-                command_id,
-                user_id,
-                command_data.get('isUser'),
-                command_data['command'],
-                command_data.get('status', 'pending'),
-                command_data.get('timestamp', datetime.now().isoformat())
-            ))
+            """,
+                (
+                    command_id,
+                    user_id,
+                    command_data.get("isUser"),
+                    command_data["command"],
+                    command_data.get("status", "pending"),
+                    command_data.get("timestamp", datetime.now().isoformat()),
+                ),
+            )
         return command_id
 
-    def get_command_history(self, user_id: str, limit: Optional[int] = None) -> List[Dict]:
+    def get_command_history(
+        self, user_id: str, limit: Optional[int] = None
+    ) -> List[Dict]:
         """Получение истории команд с возможностью ограничения количества"""
         with self._get_cursor() as cursor:
             query = """
@@ -143,14 +166,20 @@ class SQLiteStorage:
         """Очистка устаревших данных"""
         cutoff_date = (datetime.now() - timedelta(days=days_to_keep)).isoformat()
         with self._get_cursor() as cursor:
-            cursor.execute("""
+            cursor.execute(
+                """
                 DELETE FROM command_history
                 WHERE timestamp < ?
-            """, (cutoff_date,))
-            cursor.execute("""
+            """,
+                (cutoff_date,),
+            )
+            cursor.execute(
+                """
                 DELETE FROM user_data
                 WHERE updated_at < ? AND field NOT IN ('settings', 'created_at')
-            """, (cutoff_date,))
+            """,
+                (cutoff_date,),
+            )
 
 
 class AgentManager:
@@ -162,12 +191,14 @@ class AgentManager:
         Args:
             storage_path: Путь к файлу базы данных SQLite (None для памяти)
         """
-        self.storage = SQLiteStorage(storage_path if storage_path else ':memory:')
+        self.storage = SQLiteStorage(storage_path if storage_path else ":memory:")
 
     def initialize_user(self, user_id: str) -> None:
         """Инициализация нового пользователя"""
         if not self.storage.hexists(f"user:{user_id}", "created_at"):
-            self.storage.hset(f"user:{user_id}", "created_at", datetime.now().isoformat())
+            self.storage.hset(
+                f"user:{user_id}", "created_at", datetime.now().isoformat()
+            )
             self.storage.hset(f"user:{user_id}", "command_history", json.dumps([]))
             self.storage.hset(f"user:{user_id}", "settings", json.dumps({}))
             self.storage.hset(f"user:{user_id}", "agent_status", "offline")
@@ -179,7 +210,7 @@ class AgentManager:
         command: str,
         timestamp: Optional[str] = None,
         status: Optional[str] = None,
-        is_user: Optional[bool] = None
+        is_user: Optional[bool] = None,
     ) -> Dict:
         """Сохранение команды в историю"""
         self.initialize_user(user_id)  # Автоматическая инициализация при необходимости
@@ -193,7 +224,7 @@ class AgentManager:
 
         # Сохраняем в оптимизированную таблицу
         command_id = self.storage.save_command(user_id, command_data)
-        command_data['id'] = command_id
+        command_data["id"] = command_id
 
         # Также сохраняем в JSON для обратной совместимости
         history = self.get_command_history(user_id)
@@ -206,23 +237,28 @@ class AgentManager:
         """Обновление статуса команды"""
         with self.storage._get_cursor() as cursor:
             # Обновляем в оптимизированной таблице
-            cursor.execute("""
+            cursor.execute(
+                """
                 UPDATE command_history
                 SET status = ?
                 WHERE id = ? AND user_id = ?
-            """, (status, command_id, user_id))
+            """,
+                (status, command_id, user_id),
+            )
 
             # Также обновляем в JSON для обратной совместимости
             history = self.get_command_history(user_id)
             updated = False
             for cmd in history:
-                if cmd.get('id') == command_id:
-                    cmd['status'] = status
+                if cmd.get("id") == command_id:
+                    cmd["status"] = status
                     updated = True
                     break
 
             if updated:
-                self.storage.hset(f"user:{user_id}", "command_history", json.dumps(history))
+                self.storage.hset(
+                    f"user:{user_id}", "command_history", json.dumps(history)
+                )
 
             return cursor.rowcount > 0 or updated
 
@@ -296,14 +332,16 @@ class AgentManager:
     def _simulate_process_creation(self) -> int:
         """Симуляция создания процесса (для примера)"""
         import random
+
         return random.randint(1000, 9999)
 
     def backup_database(self, backup_path: str) -> bool:
         """Создание резервной копии базы данных"""
-        if self.storage.db_path == ':memory:':
+        if self.storage.db_path == ":memory:":
             return False
 
         import shutil
+
         try:
             with self.storage._lock:
                 shutil.copy2(self.storage.db_path, backup_path)
@@ -315,7 +353,9 @@ class AgentManager:
         """Очистка всех данных пользователя"""
         with self.storage._get_cursor() as cursor:
             # Удаляем из user_data
-            cursor.execute("DELETE FROM user_data WHERE user_id = ?", (f"user:{user_id}",))
+            cursor.execute(
+                "DELETE FROM user_data WHERE user_id = ?", (f"user:{user_id}",)
+            )
 
             # Удаляем из command_history
             cursor.execute("DELETE FROM command_history WHERE user_id = ?", (user_id,))

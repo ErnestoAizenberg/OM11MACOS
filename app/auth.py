@@ -4,16 +4,8 @@ from typing import Any, Dict, Optional
 from urllib.parse import urlencode
 
 import requests
-from flask import (
-    Blueprint,
-    abort,
-    current_app,
-    flash,
-    redirect,
-    request,
-    session,
-    url_for,
-)
+from flask import (Blueprint, abort, current_app, flash, redirect, request,
+                   session, url_for)
 
 auth_bp = Blueprint("auth", __name__, url_prefix="")
 
