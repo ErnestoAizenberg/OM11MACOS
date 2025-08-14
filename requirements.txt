@@ -6,4 +6,4 @@ secure
 asgiref
 requests
 dotenv
-
+pywebview
