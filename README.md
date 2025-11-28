@@ -10,6 +10,7 @@ Gateway API for web interface that communicates with OM11TG and open-manus-agent
 ```shell
 git clone https://github.com/ErnestoAizenberg/OM11MACOS.git
 cd OM11MACOS
+cp .env.example .env
 pip install -r requirements.txt
 python run.py
 ```
