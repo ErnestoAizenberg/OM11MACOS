@@ -1,7 +1,6 @@
 import os
 from typing import Callable
 
-import redis
 from flask import Flask
 
 from app.agent.agent_manager_sq import AgentManager
@@ -24,7 +23,7 @@ from app.telegram.api import TelegramClient, init_telegram_api
 from app.utils import generate_uuid_32, login_required
 from config import APIURLConfig, Config, RedisConfig
 
-init_redis: Callable[[RedisConfig], redis.Redis]
+#init_redis: Callable[[RedisConfig], redis.Redis]
 init_telegram_api: Callable
 
 
