@@ -21,7 +21,7 @@ from app.logs import logger
 from app.repos import UserRepo
 from app.telegram.api import TelegramClient, init_telegram_api
 from app.utils import generate_uuid_32, login_required
-from config import APIURLConfig, Config, RedisConfig
+from config import APIURLConfig, Config#, RedisConfig
 
 #init_redis: Callable[[RedisConfig], redis.Redis]
 init_telegram_api: Callable

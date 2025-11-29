@@ -18,7 +18,7 @@ logging.basicConfig(
 UserProfile = Dict[str, Any]
 UserProfilesGetter = Callable[[str], List[UserProfile]]
 UserProfilesSaver = Callable[[str, List[UserProfile]], None]
-UserProfilesTransformer = Callable[[List[UserProfile]], List[UserProfile]]
+UserProfilesTransformer = Callable[[List[UserProfile], str], List[UserProfile]]
 
 
 def configure_browser_api(
@@ -75,8 +75,8 @@ def configure_browser_api(
         """Endpoint to fetch browser profiles with comprehensive logging"""
         logger.info("GET /api/browser/profiles request received")
 
-        api_url: str = request.args.get("api_url")
-        browser_type: str = request.args.get("type")
+        api_url: str = request.args.get("api_url", '')
+        browser_type: str = request.args.get("type", '')
 
         logger.debug(f"Request parameters - api_url: {api_url}, type: {browser_type}")
 
@@ -152,7 +152,7 @@ def configure_browser_api(
         """Endpoint to start a browser profile with detailed operation logging"""
         logger.info("POST /api/browser/start request received")
 
-        user_id: str = session.get("user_id")
+        user_id: str = session.get("user_id", '')
         if not user_id:
             logger.warning("Unauthenticated request - missing user_id in session")
             logger.debug(f"Session data: {dict(session)}")
@@ -168,9 +168,9 @@ def configure_browser_api(
         data: Dict[str, Any] = request.get_json() or {}
         logger.debug(f"Request data: {data}")
 
-        api_url: str = data.get("api_url")
-        profile_id: str = data.get("profile_id")
-        browser_type: str = data.get("type")
+        api_url: str = data.get("api_url", '')
+        profile_id: str = data.get("profile_id", '')
+        browser_type: str = data.get("type", '')
 
         # Validate required data with detailed logging
         missing_fields = [
@@ -198,7 +198,7 @@ def configure_browser_api(
                 browser_type=browser_type,
             )
 
-            ws_url: str = result.get("ws_url")
+            ws_url: str = result.get("ws_url", '')
             if not ws_url:
                 logger.error("No WebSocket URL returned from profile start")
                 logger.debug(f"Full start result: {result}")
@@ -286,7 +286,7 @@ def configure_browser_api(
         """Endpoint to check browser status with detailed session logging"""
         logger.info("GET /api/browser/status request received")
 
-        user_id: str = session.get("user_id")
+        user_id: str = session.get("user_id", '')
         if not user_id:
             logger.warning("Status check failed - no user_id in session")
             logger.debug(f"Session contents: {dict(session)}")
@@ -336,7 +336,7 @@ def configure_browser_api(
         """Endpoint to disconnect all profiles with operation logging"""
         logger.info("POST /api/browser/disconnect request received")
 
-        user_id: str = session.get("user_id")
+        user_id: str = session.get("user_id", '')
         if not user_id:
             logger.warning("Disconnect attempt without user_id")
             return (

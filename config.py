@@ -10,8 +10,8 @@ class APIURLConfig:
     Class holding API URL configurations.
     """
 
-    OM11 = os.getenv("OM11_API_URL")
-    OM11TG = os.getenv("OM11TG_API_URL")
+    OM11: str = os.getenv("OM11_API_URL", '')
+    OM11TG: str = os.getenv("OM11TG_API_URL", '')
 
     def get(self, key, default=None):
         return getattr(self, key, default)

@@ -3,7 +3,7 @@ import logging
 import urllib.parse
 from datetime import datetime, timedelta
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple
+from typing import Dict, List, Optional, Tuple, Any
 
 import requests
 
@@ -41,7 +41,7 @@ class BrowserManager:
         """Log detailed information about the HTTP response."""
         try:
             logger.debug(f"Response status: {response.status_code}")
-            logger.debug(f"Response headers: {response.headers}")
+            logger.debug(f"Response headers: {dict(response.headers)}")
 
             try:
                 if response.text:  # Only try to parse if there's content
@@ -54,7 +54,7 @@ class BrowserManager:
             logger.error(f"Failed to log response details: {str(e)}", exc_info=True)
 
     def _make_request(
-        self, method: str, url: str, **kwargs
+        self, method: str, url: str, **kwargs: Any
     ) -> Tuple[Optional[requests.Response], Optional[Exception]]:
         """Generic request method with comprehensive logging and error handling."""
         logger.debug(f"Making {method.upper()} request to {url}")
@@ -75,7 +75,7 @@ class BrowserManager:
             )
             return None, e
 
-    def fetch_profiles(self, api_url: str, browser_type: str) -> List[Dict]:
+    def fetch_profiles(self, api_url: str, browser_type: str) -> List[Dict[str, Any]]:
         logger.info(f"Fetching profiles for {browser_type} from {api_url}")
         endpoints = {
             "octo": f"{api_url}/api/v1/profile",
@@ -99,6 +99,9 @@ class BrowserManager:
         if error:
             raise error
 
+        if response is None:
+            raise ValueError("No response received")
+
         try:
             profiles = transform_profiles(response.json(), browser_type)
             logger.info(
@@ -118,12 +121,12 @@ class BrowserManager:
 
     def check_profile(
         self, user_id: str, api_url: str, profile_id: str, browser_type: str
-    ):
+    ) -> None:
         pass
     
     def start_profile(
         self, user_id: str, api_url: str, profile_id: str, browser_type: str
-    ) -> Dict:
+    ) -> Dict[str, Any]:
         logger.info(
             f"Starting profile {profile_id} for user {user_id} (type: {browser_type})"
         )
@@ -176,7 +179,7 @@ class BrowserManager:
             logger.error(f"Failed to start profile: {str(e)}", exc_info=True)
             raise
 
-    def disconnect_all(self, user_id: str):
+    def disconnect_all(self, user_id: str) -> None:
         logger.info(f"Disconnecting all profiles for user {user_id}")
         try:
             profiles = get_user_profiles(user_id)
@@ -215,7 +218,7 @@ class BrowserManager:
             logger.error(f"Failed to disconnect all profiles: {str(e)}", exc_info=True)
             raise
 
-    def _start_octo_profile(self, api_url: str, profile_id: str) -> Dict:
+    def _start_octo_profile(self, api_url: str, profile_id: str) -> Dict[str, str]:
         logger.debug(f"Starting Octo profile {profile_id}")
         try:
             url = f"{api_url}/api/v1/profile/{profile_id}/start"
@@ -226,6 +229,9 @@ class BrowserManager:
             if error:
                 raise error
 
+            if response is None:
+                raise ValueError("No response received")
+
             ws_url = f"ws://{api_url.split('//')[1]}/ws/{profile_id}"
             logger.debug(f"Octo profile started, WS URL: {ws_url}")
             return {"ws_url": ws_url}
@@ -233,7 +239,7 @@ class BrowserManager:
             logger.error(f"Failed to start Octo profile: {str(e)}", exc_info=True)
             raise
 
-    def _start_dolphin_profile(self, api_url: str, profile_id: str) -> Dict:
+    def _start_dolphin_profile(self, api_url: str, profile_id: str) -> Dict[str, str]:
         logger.debug(f"Starting Dolphin profile {profile_id}")
         try:
             url = f"{api_url}/profile/{profile_id}/start"
@@ -242,6 +248,9 @@ class BrowserManager:
             response, error = self._make_request("POST", url)
             if error:
                 raise error
+
+            if response is None:
+                raise ValueError("No response received")
 
             data = response.json()
             if not data.get("ws_url"):
@@ -256,7 +265,7 @@ class BrowserManager:
             logger.error(f"Failed to start Dolphin profile: {str(e)}", exc_info=True)
             raise
 
-    def _start_gologin_profile(self, api_url: str, profile_id: str) -> Dict:
+    def _start_gologin_profile(self, api_url: str, profile_id: str) -> Dict[str, str]:
         logger.debug(f"Starting GoLogin profile {profile_id}")
         try:
             url = f"{api_url}/gologin/profile/{profile_id}/start"
@@ -265,6 +274,9 @@ class BrowserManager:
             response, error = self._make_request("POST", url)
             if error:
                 raise error
+
+            if response is None:
+                raise ValueError("No response received")
 
             data = response.json()
             if not data.get("debuggerAddress"):
@@ -283,10 +295,10 @@ class BrowserManager:
         self,
         api_url: str,
         profile_id: str,
-        chrome_flags: str = None,
-        start_pages: str = None,
+        chrome_flags: Optional[str] = None,
+        start_pages: Optional[str] = None,
         headless: bool = False,
-    ) -> Dict:
+    ) -> Dict[str, str]:
         logger.debug(f"Starting Undetectable profile {profile_id}")
         try:
             headers = {
@@ -304,7 +316,7 @@ class BrowserManager:
 
             url = f"{api_url}/profile/start/{urllib.parse.quote(profile_id)}"
             
-            params = {}
+            params: Dict[str, str] = {}
             if headless:
                 params["--headless"] = "new"
             if chrome_flags:
@@ -315,16 +327,19 @@ class BrowserManager:
             response, error = self._make_request(
                 "GET", url, params=params, headers=headers
             )
-            logger.debug(response.json())
-
+            
             if error:
                 raise error
- 
+
+            if response is None:
+                raise ValueError("No response received")
+
+            logger.debug(str(response.json()))
 
             resp_json = response.json()
             check_undertactable_response(resp_json)
             ws_url = None
-            data = resp_json.get('data')
+            data = resp_json.get('data', {})
 
             if data.get("websocket_link"):
                 ws_url = data["websocket_link"]
@@ -344,7 +359,7 @@ class BrowserManager:
             )
             raise
 
-    def _start_vision_profile(self, api_url: str, profile_id: str) -> Dict:
+    def _start_vision_profile(self, api_url: str, profile_id: str) -> Dict[str, str]:
         logger.debug(f"Starting Vision profile {profile_id}")
         try:
             url = f"{api_url}/api/v1/profile/{profile_id}/start"
@@ -355,6 +370,9 @@ class BrowserManager:
             if error:
                 raise error
 
+            if response is None:
+                raise ValueError("No response received")
+
             ws_url = f"ws://{api_url.split('//')[1]}/ws/{profile_id}"
             logger.debug(f"Vision profile started, WS URL: {ws_url}")
             return {"ws_url": ws_url}
@@ -362,7 +380,7 @@ class BrowserManager:
             logger.error(f"Failed to start Vision profile: {str(e)}", exc_info=True)
             raise
 
-    def _start_linken_profile(self, api_url: str, profile_id: str) -> Dict:
+    def _start_linken_profile(self, api_url: str, profile_id: str) -> Dict[str, str]:
         logger.debug(f"Starting Linken profile {profile_id}")
         try:
             url = f"{api_url}/api/profile/{profile_id}/start"
@@ -372,6 +390,9 @@ class BrowserManager:
             response, error = self._make_request("POST", url, json=payload)
             if error:
                 raise error
+
+            if response is None:
+                raise ValueError("No response received")
 
             data = response.json()
             if not data.get("wsEndpoint"):
@@ -386,7 +407,7 @@ class BrowserManager:
             logger.error(f"Failed to start Linken profile: {str(e)}", exc_info=True)
             raise
 
-    def _stop_octo_profile(self, api_url: str, profile_id: str):
+    def _stop_octo_profile(self, api_url: str, profile_id: str) -> None:
         logger.debug(f"Stopping Octo profile {profile_id}")
         try:
             url = f"{api_url}/api/v1/profile/{profile_id}/stop"
@@ -401,7 +422,7 @@ class BrowserManager:
             logger.error(f"Failed to stop Octo profile: {str(e)}", exc_info=True)
             raise
 
-    def _stop_dolphin_profile(self, api_url: str, profile_id: str):
+    def _stop_dolphin_profile(self, api_url: str, profile_id: str) -> None:
         logger.debug(f"Stopping Dolphin profile {profile_id}")
         try:
             url = f"{api_url}/profile/{profile_id}/stop"
@@ -416,7 +437,7 @@ class BrowserManager:
             logger.error(f"Failed to stop Dolphin profile: {str(e)}", exc_info=True)
             raise
 
-    def _stop_gologin_profile(self, api_url: str, profile_id: str):
+    def _stop_gologin_profile(self, api_url: str, profile_id: str) -> None:
         logger.debug(f"Stopping GoLogin profile {profile_id}")
         try:
             url = f"{api_url}/gologin/profile/{profile_id}/stop"
@@ -431,7 +452,7 @@ class BrowserManager:
             logger.error(f"Failed to stop GoLogin profile: {str(e)}", exc_info=True)
             raise
 
-    def _stop_undetectable_profile(self, api_url: str, profile_id: str):
+    def _stop_undetectable_profile(self, api_url: str, profile_id: str) -> None:
         logger.debug(f"Stopping Undetectable profile {profile_id}")
         try:
             url = f"{api_url}/api/profile/{profile_id}/stop"
@@ -448,7 +469,7 @@ class BrowserManager:
             )
             raise
 
-    def _stop_vision_profile(self, api_url: str, profile_id: str):
+    def _stop_vision_profile(self, api_url: str, profile_id: str) -> None:
         logger.debug(f"Stopping Vision profile {profile_id}")
         try:
             url = f"{api_url}/api/v1/profile/{profile_id}/stop"
@@ -463,7 +484,7 @@ class BrowserManager:
             logger.error(f"Failed to stop Vision profile: {str(e)}", exc_info=True)
             raise
 
-    def _stop_linken_profile(self, api_url: str, profile_id: str):
+    def _stop_linken_profile(self, api_url: str, profile_id: str) -> None:
         logger.debug(f"Stopping Linken profile {profile_id}")
         try:
             url = f"{api_url}/api/profile/{profile_id}/stop"
@@ -478,7 +499,7 @@ class BrowserManager:
             logger.error(f"Failed to stop Linken profile: {str(e)}", exc_info=True)
             raise
 
-    def _cleanup_old_configs(self):
+    def _cleanup_old_configs(self) -> None:
         logger.info("Cleaning up old config files")
         try:
             cutoff = datetime.now() - timedelta(days=self.CONFIG_CLEANUP_DAYS)
@@ -512,7 +533,7 @@ def get_user_config_path(user_id: str) -> Path:
     return path
 
 
-def get_user_profiles(user_id: str) -> List[Dict]:
+def get_user_profiles(user_id: str) -> List[Dict[str, Any]]:
     logger.debug(f"Getting profiles for user {user_id}")
     config_file = get_user_config_path(user_id)
     if not config_file.exists():
@@ -536,7 +557,7 @@ def get_user_profiles(user_id: str) -> List[Dict]:
         return []
 
 
-def save_user_profiles(user_id: str, profiles: List[Dict]):
+def save_user_profiles(user_id: str, profiles: List[Dict[str, Any]]) -> None:
     logger.debug(f"Saving {len(profiles)} profiles for user {user_id}")
     config_file = get_user_config_path(user_id)
     try:
@@ -550,7 +571,7 @@ def save_user_profiles(user_id: str, profiles: List[Dict]):
         raise
 
 
-def transform_profiles(raw_profiles: List[Dict], browser_type: str) -> List[Dict]:
+def transform_profiles(raw_profiles: Any, browser_type: str) -> List[Dict[str, Any]]:
     logger.debug(f"Transforming profiles for {browser_type}")
     transformed = []
 
@@ -583,14 +604,16 @@ def transform_profiles(raw_profiles: List[Dict], browser_type: str) -> List[Dict
             if not isinstance(raw_profiles, dict) or "data" not in raw_profiles:
                 raise ValueError("Expected data field in Undetectable response")
 
-            for profile_id, profile in raw_profiles.get("data", {}).items():
-                transformed.append(
-                    {
-                        "id": profile_id,
-                        "name": profile.get("name", "unnamed"),
-                        "browser": "undetectable",
-                    }
-                )
+            data = raw_profiles.get("data", {})
+            if isinstance(data, dict):
+                for profile_id, profile in data.items():
+                    transformed.append(
+                        {
+                            "id": profile_id,
+                            "name": profile.get("name", "unnamed"),
+                            "browser": "undetectable",
+                        }
+                    )
         elif browser_type == "vision":
             if not isinstance(raw_profiles, list):
                 raise ValueError("Expected list for Vision profiles")
@@ -622,7 +645,7 @@ def transform_profiles(raw_profiles: List[Dict], browser_type: str) -> List[Dict
         raise
 
 
-def check_undertactable_response(response):
+def check_undertactable_response(response: Dict[str, Any]) -> None:
     code = response.get('code')
     if code == 0:
         return
@@ -632,6 +655,5 @@ def check_undertactable_response(response):
             raise ValueError("Invalid Undetectable response")
         error = data.get("error")
         if not error:
-            raise ValueError("UnkownError: error code 1, but error is {error}")
-        raise UndetectableError("Undetectable browser return error: {error}")
-                    
+            raise ValueError(f"UnknownError: error code 1, but error is {error}")
+        raise UndetectableError(f"Undetectable browser return error: {error}")

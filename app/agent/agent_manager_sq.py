@@ -1,4 +1,4 @@
-# user_manager.py
+import logging
 import json
 import sqlite3
 import threading
@@ -185,13 +185,15 @@ class SQLiteStorage:
 class AgentManager:
     """Менеджер пользователей и агентов с SQLite-хранилищем"""
 
-    def __init__(self, storage_path: Optional[str] = None):
+    def __init__(self, storage_path: Optional[str] = None, logger: Optional[logging.Logger] = None):
         """Инициализация менеджера
 
         Args:
             storage_path: Путь к файлу базы данных SQLite (None для памяти)
+            logger: Main logger
         """
         self.storage = SQLiteStorage(storage_path if storage_path else ":memory:")
+        self.logger = logger if logger else logging.getLogger(__name__)
 
     def initialize_user(self, user_id: str) -> None:
         """Инициализация нового пользователя"""
@@ -310,6 +312,16 @@ class AgentManager:
         self.initialize_user(user_id)
         status = self.storage.hget(f"user:{user_id}", "agent_status") or "offline"
         pid = self.storage.hget(f"user:{user_id}", "agent_pid")
+        
+        if pid is None and status == "online":
+            self.logger.warning(f"Correcting inconsistent agent state for user {user_id}")
+            status = "offline"
+            self.storage.hset(f"user:{user_id}", "agent_status", "offline")
+        elif pid is not None and status == "offline":
+            self.logger.warning(f"Correcting inconsistent agent state for user {user_id}")
+            status = "online"
+            self.storage.hset(f"user:{user_id}", "agent_status", "online")
+
         return status, int(pid) if pid else None
 
     def connect_browser(self, user_id: str) -> bool:
